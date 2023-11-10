@@ -1,0 +1,600 @@
+#include <avr/io.h>
+#include <util/delay.h>
+#include "hd44780.h"
+#include <avr/interrupt.h>
+#include <stdio.h>//bez tego jest ostrze¿enie przy atoi
+#include <stdlib.h>// bez tego jest ostrze¿enie przy sprintf
+//#define F_CPU 8000000UL// to jest zdefiniowane w rodowisku EClipse
+#define PRESKALER 1
+#define TRIAK PD5
+#define PRZEKAZNIK PC5
+#define MODUL_GSM PC4
+#define MODUL_BT PC3
+#define WYSWIETLACZ_LCD PC2
+#define LED PA6
+#define ADC_POT PC3//PC5
+#define ADC_LM35 PC0//PC4
+#define PRZYCISK_ZATRZYMAJ (1<<PD2)
+#define PRZYCISK_TRYBU (1<<PD3)
+
+#define PIN_PRZYCISKOW PIND
+#define WEJSCIA_PRZYCISKOW (PIN_PRZYCISKOW & (PRZYCISK_ZATRZYMAJ|PRZYCISK_TRYBU))
+#define PROG_TRZYMANIA 10000
+#define PROG_MRUGANIA 20
+#define ROZMIAR_BUFORA 32//32
+enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8 };
+enum Tryb eAktywnyTryb = GSM;
+char cTryb[17]= "GSM CONTROL";
+unsigned char ucWejsciaPrzyciskowNowe=0;
+unsigned char ucWejsciaPrzyciskowStare=0;
+unsigned int uiLicznikTrzymania=0;
+unsigned char sekundy;
+unsigned char minuty;
+unsigned char godziny;
+unsigned char sekundy_dziesiatki;
+unsigned char sekundy_jednostki;
+unsigned char minuty_dziesiatki;
+unsigned char minuty_jednostki;
+unsigned char godziny_dziesiatki;
+unsigned char godziny_jednostki;
+
+void ADC_Init(void);
+void ADC_Pomiar(int Pin);
+void USART_Init(void);
+void PWM_inicjacja(void);
+void Wyswietlanie(char cDane[]);
+void Obsluga_Przyciskow(void);
+void Przyciski_Init(void);
+int Sprawdz_Tekst(char *cTekst, char *cWzorzec);
+void USART_Wyslij(char cTekst[]);
+void ZapewnijMiejsceDlaKolejnejWiadomosci(void);
+void WczytujDane(void);
+void SprawdzDane(void);
+void Wyjscia_Init(void);
+void ZmianaWypelnienia(void);
+void ObslugaWyswietlacza(void);
+void Timer0_inicjacja(void); //to jest potrzebne do mrugania wyswietlacza
+void Wystartowanie_Trybu(int eAktywnyTryb);
+void TWI_inicjacja(void);
+unsigned char TWI_odczyt(unsigned char adres_rejestru);
+void TWI_zapis(unsigned char adres_rejestru, unsigned char liczba);
+//void WYSWIETLACZ_LCD_Off(void);
+
+volatile int iFlagaDoWyslania;
+char WzorWiadOdebr[] = "+CMTI: "; //char WzorWiadOdebr[] = "+CMTI: \"SM\",";
+char WzorMetadanych[] = "+CMGR:";
+char cOdbierzSMS[14]="AT+CMGR=x";
+char cUsunSMS[14]="AT+CMGD=x";
+//char cTemp[33];
+char cLinijka1[17];//="0123456789ABCDEF";
+char cLinijka2[17];//="123456789ABCDEF0";
+//char cDebug[17];
+char cTrescWiadomosci[150]="NO MESSAGE!";
+char cMetaDaneWiadomosci[65];
+char cOdebranaKomenda[33];
+char *cDane;
+char cFlagaZapelnieniaPamieci;
+unsigned char ucTWI_dane;
+
+volatile unsigned char vucBuforCykliczny[ROZMIAR_BUFORA];//
+volatile int viIndeksZapisu;
+volatile int viIndeksOdczytu;
+int iLicznikDanych;
+char cBuforUART_Wysylanie[15];
+unsigned int uiWynik_POT=3069;
+unsigned int uiWynik_LM35=3069;
+volatile unsigned int uiLicznikMrugania=0;
+volatile unsigned int uiICR_Prim;
+volatile int iCzestotliwosc;
+volatile double dWypelnienieProcent;
+int n;
+char cIndeksWiadomosciOdebr[4]="";
+char cStan;
+enum Stan {OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI=0, OCZEKIWANIE_NA_METADANE=1, OCZEKIWANIE_NA_TRESC=2, OCZEKIWANIE_NA_ANALIZE};
+char iIndeks=0;
+
+int main(void){
+   //Przyciski_Init();
+   TWI_inicjacja();
+   //TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
+   //TWI_zapis(0x01,0b00000001);//29minuty
+   //TWI_zapis(0x02,0b00000000);//23godzina
+   PWM_inicjacja();
+   Timer0_inicjacja();
+   iLicznikDanych=0;
+   cFlagaZapelnieniaPamieci=0;
+
+
+   Wyjscia_Init();
+
+   lcd_init();
+   //PORTC |= (1<<WYSWIETLACZ_LCD);
+   LCD_DISPLAY(LCDDISPLAY);
+   PORTC |= (1<<MODUL_GSM);
+   sei();
+
+  ADC_Init(); //odkomentowac
+  USART_Init();
+ _delay_ms(3000);
+  USART_Wyslij("ATE0");
+  _delay_ms(500);
+  USART_Wyslij("AT+CMGF=1");
+  _delay_ms(500);
+  USART_Wyslij("AT+CPMS=\"ME_P\",\"ME_P\",\"ME_P\""); //USART_Wyslij("AT+CPMS=\"SM\""); /
+  _delay_ms(500);
+
+  cStan=OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI;
+  cDane=cOdebranaKomenda; //domyslny bufor (dla stanu = 0)
+  Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
+
+  while(1){
+	  //PORTC ^= (1<<PRZEKAZNIK);
+	  //_delay_ms(1000);
+/*
+	  sekundy=TWI_odczyt(0x00);
+	  sekundy_dziesiatki=(sekundy>>4);
+	  sekundy_jednostki=(sekundy & 0b00001111);
+
+	  minuty=TWI_odczyt(0x01);
+	  minuty_dziesiatki=(minuty>>4);
+	  minuty_jednostki=(minuty & 0b00001111);
+
+	  godziny=TWI_odczyt(0x02);
+	  godziny_dziesiatki=(godziny>>4);
+	  godziny_jednostki=(godziny & 0b00001111);
+
+	  sprintf(cTrescWiadomosci,"%d%d:%d%d:%d%d ",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
+	  ObslugaWyswietlacza();
+	*/
+	  WczytujDane();
+	  SprawdzDane();
+	  //Obsluga_Przyciskow();
+   }
+   return 0;
+}
+
+void SprawdzDane(void){
+	char cBuforDlaOdebranejLiczby[15];
+	int iLicznikZnakow;
+	if(cStan==OCZEKIWANIE_NA_ANALIZE){
+		if ( Sprawdz_Tekst(cTrescWiadomosci,"ON") || Sprawdz_Tekst(cTrescWiadomosci,"On") ){
+			dWypelnienieProcent=100;
+			PORTA |=  (1<<LED);
+			ZmianaWypelnienia();
+		}
+		else if( Sprawdz_Tekst(cTrescWiadomosci,"OFF") || Sprawdz_Tekst(cTrescWiadomosci,"Off") ){
+			dWypelnienieProcent=0;
+			PORTA &=  ~(1<<LED);
+			ZmianaWypelnienia();
+		}
+		else{
+			if ( Sprawdz_Tekst(cTrescWiadomosci,"w ") || Sprawdz_Tekst(cTrescWiadomosci,"W ")){
+				for(iLicznikZnakow=2;cTrescWiadomosci[iLicznikZnakow]!='\0';iLicznikZnakow++){
+					cBuforDlaOdebranejLiczby[iLicznikZnakow-2]=cTrescWiadomosci[iLicznikZnakow];
+				}
+				cBuforDlaOdebranejLiczby[iLicznikZnakow-2]='\0'; //nowosc
+				dWypelnienieProcent=(atof(cBuforDlaOdebranejLiczby));
+				ZmianaWypelnienia();
+			}
+		}
+
+		ZapewnijMiejsceDlaKolejnejWiadomosci();
+		cDane=cOdebranaKomenda;
+		cStan=OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI;
+	}
+}
+
+void Wyswietlanie(char cDane[]){
+	int i=0;
+
+	cLinijka1[0]='\0';
+	cLinijka2[0]='\0';
+
+	for(i=0;cDane[i]!='\0';i++){
+		if(i<=15){
+			cLinijka1[i]=cDane[i];
+			cLinijka1[i+1]='\0';
+		}
+		else{
+			cLinijka2[i-16]=cDane[i];
+			cLinijka2[i-15]='\0';
+
+			if(i>=31){
+				break;
+			}
+		}
+	}
+	LCD_CLEAR;
+	LCD_LOCATE(0,0);
+	lcd_puts(cLinijka1);
+
+	LCD_LOCATE(0,1);
+	lcd_puts(cLinijka2);
+}
+
+void Obsluga_Przyciskow(void){
+	ucWejsciaPrzyciskowNowe = WEJSCIA_PRZYCISKOW;
+	//USART_Wyslij("ATD+48695316105;");
+
+	if((ucWejsciaPrzyciskowNowe & PRZYCISK_ZATRZYMAJ) ==0){
+		eAktywnyTryb = PRE_STOP;
+		sprintf(cTryb,"STOP");
+	}
+
+	if( ((ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) ==0) && (ucWejsciaPrzyciskowNowe==ucWejsciaPrzyciskowStare) ){ //przytrzymano
+		uiLicznikTrzymania++;
+		if(uiLicznikTrzymania>=PROG_TRZYMANIA){
+			uiLicznikTrzymania=0;
+			uiLicznikMrugania=0;
+			switch(eAktywnyTryb){
+				case PRE_GSM:
+					eAktywnyTryb=GSM;
+					break;
+				case PRE_BT:
+					eAktywnyTryb=BT;
+					break;
+				case PRE_POT:
+					eAktywnyTryb=POT;
+					break;
+				case PRE_STOP:
+					eAktywnyTryb=STOP;
+					break;
+			}
+		}
+		//Wystartowanie_Trybu(eAktywnyTryb);
+	}
+	else if(( ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ==0){ //puszczono przycisk (krotkie nacisniecie)
+		switch(eAktywnyTryb){
+			case PRE_STOP:
+				eAktywnyTryb=PRE_GSM;
+				sprintf(cTryb,"GSM CONTROL");
+				break;
+			case PRE_GSM:
+				eAktywnyTryb=PRE_BT;
+				sprintf(cTryb,"BT CONTROL");
+				break;
+			case PRE_BT:
+				eAktywnyTryb=PRE_POT;
+				sprintf(cTryb,"POT CONTROL");
+				break;
+			case PRE_POT:
+				eAktywnyTryb=PRE_STOP;
+				sprintf(cTryb,"STOP");
+				break;
+		}
+		uiLicznikTrzymania=0;
+	}
+	else{ //nie nacisnieto PRZYCISK_TRYBU
+		uiLicznikTrzymania=0;
+	}
+	ucWejsciaPrzyciskowStare=ucWejsciaPrzyciskowNowe;
+}
+
+void Przyciski_Init(void){
+	DDRD &= ~((PRZYCISK_ZATRZYMAJ)|(PRZYCISK_TRYBU));
+	PORTD |= (PRZYCISK_ZATRZYMAJ |PRZYCISK_TRYBU); //podiciagniecie do +
+}
+
+void USART_Init(void){
+   viIndeksZapisu=0;
+   viIndeksOdczytu=0;
+
+   UBRRH = 0; // PREDKOSC 9600;  // trzeba zmienic jesli zmienimy f
+   UBRRL = 51; //(dla 8Mhz 51, dla 1 -6, dla 16-103)
+
+   UCSRB = (1<<RXEN)|(1<<TXEN) |(1<<RXCIE);//RXCIE0 przerwanie od odbioru
+   UCSRC = (1<<URSEL) | (1<<UCSZ1) | (1<<UCSZ0);  // 1! bit stopu, danych8, bez parzystosci
+}
+
+void USART_Wyslij(char cTekst[]){ //WYSLIJ
+   unsigned char iLicznikZnakow;
+
+   for(iLicznikZnakow=0;cTekst[iLicznikZnakow]!='\0';iLicznikZnakow++){
+      while ( !( UCSRA & (1<<UDRE)) );
+   	  UDR = cTekst[iLicznikZnakow];
+   }
+
+   while ( !( UCSRA & (1<<UDRE)) );
+   UDR = 13;
+}
+
+ISR(USART_RXC_vect){
+   if(viIndeksZapisu != (viIndeksOdczytu-1) ){ //jesli jest miejsce (nie nadpiszemy nieodczytanych danych)
+	   vucBuforCykliczny[viIndeksZapisu]=UDR;
+	   viIndeksZapisu=viIndeksZapisu+1;
+	   if(viIndeksZapisu>=ROZMIAR_BUFORA){
+		   viIndeksZapisu=0;
+	   }
+   }
+}
+
+ISR(TIMER0_OVF_vect){
+	ObslugaWyswietlacza();
+}
+
+int Sprawdz_Tekst(char *cTekst, char *cWzorzec){
+	int iResult; // 0: NOK, 1: OK
+	int i;
+
+	iResult=1;
+
+	for(i=0;cWzorzec[i]!='\0';i++){
+		if( cWzorzec[i]!=cTekst[i] ){
+			iResult=0;
+			break;
+		}
+	}
+
+	return iResult;
+}
+
+void ZapewnijMiejsceDlaKolejnejWiadomosci(void){
+	if(iIndeks>=70){
+		cFlagaZapelnieniaPamieci=1;
+		iIndeks=20;
+	}
+	if(cFlagaZapelnieniaPamieci==1){
+		sprintf(cUsunSMS,"AT+CMGD=%d",iIndeks+1);
+		USART_Wyslij(cUsunSMS);
+	}
+}
+
+void WczytujDane(void){
+	if(viIndeksOdczytu!=viIndeksZapisu){
+		if( (vucBuforCykliczny[viIndeksOdczytu]==10)  ){ //jesli LF
+			//zrob nic
+		}
+		else if( (vucBuforCykliczny[viIndeksOdczytu]!=13) ){ //jesli zwykly znak
+			cDane[iLicznikDanych]=vucBuforCykliczny[viIndeksOdczytu];
+			iLicznikDanych++;
+		}
+		else{ //jesli CR
+			cDane[iLicznikDanych]='\0';
+			iLicznikDanych=0;
+			//PORTA |=  (1<<LED);//usun
+			switch(cStan){
+		    	case OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI:
+		    		if ( Sprawdz_Tekst(cDane,WzorWiadOdebr) ){
+		    			for(n=12;cDane[n]!='\0';n++){ // sprawdzimy czy nie jest to komenda o odebraniu SMS
+		    				cIndeksWiadomosciOdebr[n-12]=cDane[n];
+		    				cIndeksWiadomosciOdebr[n-11]='\0';
+		    			}
+		    			iIndeks=atoi(cIndeksWiadomosciOdebr);
+		    			sprintf(cOdbierzSMS,"AT+CMGR=%d,1",iIndeks);
+		    			USART_Wyslij(cOdbierzSMS);
+
+		    			cStan=OCZEKIWANIE_NA_METADANE;
+		    			cDane = cMetaDaneWiadomosci;
+		    		}
+		    		break;
+		    	case OCZEKIWANIE_NA_METADANE:
+		    		if ( Sprawdz_Tekst(cMetaDaneWiadomosci,"+CMGR") ){
+		    			cStan = OCZEKIWANIE_NA_TRESC;
+		    			cDane = cTrescWiadomosci;
+		    		}
+		    		break;
+		    	case OCZEKIWANIE_NA_TRESC:
+		    		cStan = OCZEKIWANIE_NA_ANALIZE;
+		    		ObslugaWyswietlacza();
+		    		//cDane = cOdebranaKomenda; //to ustawimy po sprawdzeniu danych
+		    		break;
+				}
+		}
+		viIndeksOdczytu++;
+		if(viIndeksOdczytu>=ROZMIAR_BUFORA){
+			viIndeksOdczytu=0;
+		}
+	}
+}
+
+void PWM_inicjacja(void)
+{
+		uiICR_Prim = 7999; //
+		iCzestotliwosc = F_CPU/PRESKALER/(uiICR_Prim+1); //(uiICR_Prim +1?)  //system daje niedokladnosc do 1 hz - zostaje tylko czesc calkowita
+
+		dWypelnienieProcent=0; //startujemy z 0%
+
+		DDRD |= (1<<TRIAK); // klucz
+
+		ICR1=uiICR_Prim; //TOP
+		OCR1A=uiICR_Prim*dWypelnienieProcent/100;
+
+		TCCR1A	= (1<<WGM11) | (1<<COM1A1); // wyjscie OC1A ustaw przy bottom, przy compare wy³¹cz
+	    TCCR1B = TCCR1B | ( (1<<WGM12)|(1<<WGM13)); ////TRYB 14 fast pwm - wgm11,12,13 DZIA£A! ALE SYMYLATOR JEST Z£Y!
+
+		TCCR1B =TCCR1B | ((1<<CS10)/*|(1<<CS12)*/); //PRESKALER 1024 PIERWSZY!!!1
+
+}
+
+void Timer0_inicjacja(void)
+{
+	TCCR0 |= ((1<<CS00)|(1<<CS02)) ; //PRESKALER 1024
+ 	TIMSK |= (1<<TOIE0); //przerwanie na przepełnienie
+}
+
+void ZmianaWypelnienia(void){
+
+	if(dWypelnienieProcent>100){
+		dWypelnienieProcent=100;
+    }
+    if(dWypelnienieProcent<=0){//korekta
+    	dWypelnienieProcent=0;
+        TCCR1A = TCCR1A & (~(1<<COM1A1));
+    }
+    else{
+	    OCR1A=uiICR_Prim*dWypelnienieProcent/100; // tu sie zawiesza dla w 100
+	    TCCR1A = TCCR1A | (1<<COM1A1);
+
+	//    sprintf(cInfoWyp,"Wyp. %3.1f%% ",dWypelnienieProcent);
+	//    Wyswietlanie();
+	//    iFlagaDoWyslania = 1;
+    }
+	//PORTA &= ~ (1<<LED);//usun
+}
+
+void ADC_Init(void)
+{//ADC5
+	DDRC &= ~(1<<ADC_POT); // ustawienie wejsc, PC5 - wejscie
+	DDRC &= ~(1<<ADC_LM35); //PC4 wejscie
+	PORTC = PORTC | ADC_POT | ADC_LM35;// podciagniecie
+	ADMUX=(1<<REFS0);//|(1<<MUX0)|(1<<MUX2);//
+	//ADCSRA |= (1<<ADEN);
+}
+
+void ADC_Pomiar(int Pin){
+
+	int i;
+	unsigned int uiWynik_Tymczasowy=0;
+	unsigned int *uiWynik=&uiWynik_POT;
+
+	if(Pin==ADC_POT){
+		ADMUX=(1<<REFS0)|(1<<MUX0)|(1<<MUX1);// PC3
+		uiWynik=&uiWynik_POT;
+	}
+	else if(Pin==ADC_LM35){
+		ADMUX=(1<<REFS0); //|(MUXy=0;// PC0
+		uiWynik=&uiWynik_LM35;
+	}
+	ADCSRA |= (1<<ADEN);
+
+	uiWynik_Tymczasowy=0;
+	for(i=0;i<=2;i++){
+		ADCSRA|=(1<<ADSC);//pojedynczy pomiar
+		while(ADCSRA & (1<<ADSC));
+		uiWynik_Tymczasowy +=ADC;
+	}
+	ADCSRA &= ~(1<<ADEN);
+
+	if( (uiWynik_Tymczasowy>*uiWynik) &&  ((uiWynik_Tymczasowy-*uiWynik)>=30) ){
+		*uiWynik=uiWynik_Tymczasowy;
+	}
+	if( (uiWynik_Tymczasowy<*uiWynik) &&  ((*uiWynik-uiWynik_Tymczasowy)>=30) ){
+		*uiWynik=uiWynik_Tymczasowy;
+	}
+	//dOpoznienieZaplonuProcent= (float) (3069-uiWynik_POT)*100/3069;
+}
+
+void Wyjscia_Init(void){
+	//wylacz JTAG:
+	MCUCSR |= (1<<JTD);
+	MCUCSR |= (1<<JTD);
+
+	DDRA|=(1<<LED);
+	PORTA &= ~ (1<<LED);
+
+	DDRC |= (1<<PRZEKAZNIK);
+	DDRC |= (1<<MODUL_GSM);
+	DDRC |= (1<<MODUL_BT);
+	DDRC |= (1<<WYSWIETLACZ_LCD);
+}
+
+void ObslugaWyswietlacza(void){
+
+	LCD_CLEAR;
+
+	if( (eAktywnyTryb==PRE_BT) ||  (eAktywnyTryb==PRE_GSM) || (eAktywnyTryb==PRE_POT) || (eAktywnyTryb==PRE_STOP) ){
+		if(uiLicznikMrugania<=PROG_MRUGANIA){
+			LCD_LOCATE(0,0);
+			lcd_puts(cTryb);
+		}
+		if(uiLicznikMrugania>=2*PROG_MRUGANIA){
+			uiLicznikMrugania=0;
+		}
+		uiLicznikMrugania++;
+	}
+	else{
+		LCD_LOCATE(0,0);
+		lcd_puts(cTryb);
+	}
+	LCD_LOCATE(0,1);
+	lcd_puts(cTrescWiadomosci);
+
+}
+
+void Wystartowanie_Trybu(int eAktywnyTryb){
+	switch(eAktywnyTryb){
+		case GSM:
+			sprintf(cTryb,"GSM CONTROL");
+			break;
+		case BT:
+			sprintf(cTryb,"BT CONTROL");
+			break;
+		case POT:
+			sprintf(cTryb,"POT CONTROL");
+			break;
+		case STOP:
+			sprintf(cTryb,"STOP");
+			break;
+	}
+}
+
+//TWI //I2C
+void TWI_inicjacja(void)
+{
+  // Czestotliwosc TWI(i2c) = 100kHz (max 100kHz) -> atmega8 taktowana wewnetrznie 8MHz (RC=8MHz)
+  // ------------------------------------------------
+  /* TWSR = TWS7 TWS6 TWS5 TWS4 TWS3  -   TWPS1 TWPS0 */
+  TWSR =0b00000000;    // Preskaler = 1  ->> TWPS1=0 TWPS0=0
+  // ------------------------------------------------------
+  /* TWBR = TWBR7 TWBR6 TWBR5 TWBR4 TWBR3 TWBR2 TWBR1 TWBR0 */
+  TWBR =0b00100000;
+  /* Rejestr odpowiedzialny za wybór współczynnika podziału dla generatora.
+     Generator ten odpowiada za czestotliwosc która jest dzielona przez
+     sygnał zegarowy SCL w trybie pracy Master.
+     ->> TWBR musi byc wieksze od 10 dla stabilnej pracy TWI(i2c)
+ Czyli ((8MHz/100kHz)-16)/2=32  => TWBR=32 lub TWBR=0x20 lub TWBR=0b00100000 */
+}
+
+unsigned char TWI_odczyt(unsigned char adres_rejestru){
+ unsigned char odczyt;
+ unsigned char scalak=0xD0;
+ TWCR =(1 << TWINT) | (1 << TWSTA) | ( 1 << TWEN );
+ while(!(TWCR & (1 << TWINT)));
+ TWDR =scalak;
+ TWCR =(1 << TWINT) | (1 << TWEN);
+ while(!(TWCR & (1 << TWINT)));
+ TWDR =adres_rejestru;
+ TWCR =(1 << TWINT) | (1 << TWEN);
+ while(!(TWCR & (1 << TWINT)));
+ TWCR =(1 << TWINT) | (1 << TWSTA) | ( 1 << TWEN );
+ while(!(TWCR & (1 << TWINT)));
+ TWDR =scalak | 0x01;
+ TWCR =(1 << TWINT) | (1 << TWEN);
+ while(!(TWCR & (1 << TWINT)));
+ TWCR =(1 << TWINT) | (1 << TWEN);
+ while(!(TWCR & (1 << TWINT)));
+ odczyt =TWDR;
+ TWCR =(1 << TWINT) | (1<<TWEN) | (1<<TWSTO);
+ return(odczyt);
+}
+
+void TWI_zapis(unsigned char adres_rejestru, unsigned char liczba)
+ {
+  unsigned char scalak=0xD0;
+  TWCR =(1 << TWINT) | (1 << TWSTA) | ( 1 << TWEN );
+  while(!(TWCR & (1 << TWINT)));
+  TWDR =scalak;
+  TWCR =(1 << TWINT) | (1 << TWEN);
+  while(!(TWCR & (1 << TWINT)));
+  TWDR =adres_rejestru;
+  TWCR =(1 << TWINT) | (1 << TWEN);
+  while(!(TWCR & (1 << TWINT)));
+  TWDR =liczba;
+  TWCR =(1 << TWINT) | (1 << TWEN);
+  while(!(TWCR & (1 << TWINT)));
+  TWCR =(1 << TWINT) | (1<<TWEN) | (1<<TWSTO);
+}
+
+/*
+void WYSWIETLACZ_LCD_Off(void){
+	PORTC &= ~(1<<WYSWIETLACZ_LCD);
+
+	PORTB |=  _BV(PB0);
+	PORTB |=  _BV(PB1);
+	PORTB |=  _BV(PB4);
+    PORTB |=  _BV(PB5);
+    PORTB |=  _BV(PB6);
+	PORTB |=  _BV(PB7);
+	PORTA |=  _BV(PA7);
+}
+*/
