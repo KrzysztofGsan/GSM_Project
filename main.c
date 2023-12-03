@@ -16,6 +16,8 @@
 #define ADC_LM35 PC0//PC4
 #define PRZYCISK_ZATRZYMAJ (1<<PD2)
 #define PRZYCISK_TRYBU (1<<PD3)
+#define TRUE 1
+#define FALSE 0
 
 #define PIN_PRZYCISKOW PIND
 #define WEJSCIA_PRZYCISKOW (PIN_PRZYCISKOW & (PRZYCISK_ZATRZYMAJ|PRZYCISK_TRYBU))
@@ -38,6 +40,11 @@ unsigned char minuty_jednostki;
 unsigned char godziny_dziesiatki;
 unsigned char godziny_jednostki;
 
+unsigned char ON_godzina=21;
+unsigned char ON_minuta=18;
+unsigned char OFF_godzina=21;
+unsigned char OFF_minuta=20;
+
 void ADC_Init(void);
 void ADC_Pomiar(int Pin);
 void USART_Init(void);
@@ -58,6 +65,8 @@ void Wystartowanie_Trybu(int eAktywnyTryb);
 void TWI_inicjacja(void);
 unsigned char TWI_odczyt(unsigned char adres_rejestru);
 void TWI_zapis(unsigned char adres_rejestru, unsigned char liczba);
+void TimeTWIRead(void);
+char TimeMatchCheck(int godzina_zal, int minuta_zal);
 //void WYSWIETLACZ_LCD_Off(void);
 
 volatile int iFlagaDoWyslania;
@@ -69,7 +78,8 @@ char cUsunSMS[14]="AT+CMGD=x";
 char cLinijka1[17];//="0123456789ABCDEF";
 char cLinijka2[17];//="123456789ABCDEF0";
 //char cDebug[17];
-char cTrescWiadomosci[150]="NO MESSAGE!";
+char cTrescWiadomosci2[150]="NO MESSAGE!";
+char cTrescWiadomosci1[150]="ALARM";
 char cMetaDaneWiadomosci[65];
 char cOdebranaKomenda[33];
 char *cDane;
@@ -97,8 +107,8 @@ int main(void){
    //Przyciski_Init();
    TWI_inicjacja();
    //TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
-   //TWI_zapis(0x01,0b00000001);//29minuty
-   //TWI_zapis(0x02,0b00000000);//23godzina
+   //TWI_zapis(0x01,0x24);//minut
+   //TWI_zapis(0x02,0x13);//godzina
    PWM_inicjacja();
    Timer0_inicjacja();
    iLicznikDanych=0;
@@ -128,9 +138,51 @@ int main(void){
   Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
 
   while(1){
-	  //PORTC ^= (1<<PRZEKAZNIK);
-	  //_delay_ms(1000);
-/*
+	  _delay_ms(1000);
+	  TimeTWIRead();
+	  sprintf(cTrescWiadomosci1,"ON%d:%d OFF%d:%d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
+	  sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d ",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
+	  ObslugaWyswietlacza();
+	  if ( TimeMatchCheck(ON_godzina,ON_minuta) == TRUE){
+		  PORTC |= (1<<PRZEKAZNIK);
+		  PORTA |=  (1<<LED);
+	  }
+	  if ( TimeMatchCheck(OFF_godzina,OFF_minuta) == TRUE){
+		  PORTC &= ~(1<<PRZEKAZNIK);
+		  PORTA &=  ~(1<<LED);
+	  }
+
+	  WczytujDane();
+	  SprawdzDane();
+	  Obsluga_Przyciskow();
+   }
+   return 0;
+}
+
+
+
+
+char TimeMatchCheck(int godzina_zal, int minuta_zal){
+	char TimeMatch; // 1: match, 0: no match
+	int godzina_zal_jednostki, godzina_zal_dziesiatki, minuta_zal_jednostki, minuta_zal_dziesiatki;
+	TimeMatch = FALSE;
+	godzina_zal_dziesiatki = godzina_zal/10;
+	godzina_zal_jednostki = (godzina_zal-10*godzina_zal_dziesiatki);
+	minuta_zal_dziesiatki = minuta_zal/10;
+	minuta_zal_jednostki = (minuta_zal - 10*minuta_zal_dziesiatki);
+
+	if(godziny_dziesiatki==godzina_zal_dziesiatki && godziny_jednostki==godzina_zal_jednostki) {
+		//godzina match
+
+		if(minuty_dziesiatki==minuta_zal_dziesiatki && minuty_jednostki==minuta_zal_jednostki){
+			//minuta match
+			TimeMatch = TRUE;
+		}
+	}
+	return TimeMatch;
+}
+
+void TimeTWIRead(void){
 	  sekundy=TWI_odczyt(0x00);
 	  sekundy_dziesiatki=(sekundy>>4);
 	  sekundy_jednostki=(sekundy & 0b00001111);
@@ -142,35 +194,27 @@ int main(void){
 	  godziny=TWI_odczyt(0x02);
 	  godziny_dziesiatki=(godziny>>4);
 	  godziny_jednostki=(godziny & 0b00001111);
-
-	  sprintf(cTrescWiadomosci,"%d%d:%d%d:%d%d ",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
-	  ObslugaWyswietlacza();
-	*/
-	  WczytujDane();
-	  SprawdzDane();
-	  //Obsluga_Przyciskow();
-   }
-   return 0;
 }
+
 
 void SprawdzDane(void){
 	char cBuforDlaOdebranejLiczby[15];
 	int iLicznikZnakow;
 	if(cStan==OCZEKIWANIE_NA_ANALIZE){
-		if ( Sprawdz_Tekst(cTrescWiadomosci,"ON") || Sprawdz_Tekst(cTrescWiadomosci,"On") ){
+		if ( Sprawdz_Tekst(cTrescWiadomosci2,"ON") || Sprawdz_Tekst(cTrescWiadomosci2,"On") ){
 			dWypelnienieProcent=100;
 			PORTA |=  (1<<LED);
 			ZmianaWypelnienia();
 		}
-		else if( Sprawdz_Tekst(cTrescWiadomosci,"OFF") || Sprawdz_Tekst(cTrescWiadomosci,"Off") ){
+		else if( Sprawdz_Tekst(cTrescWiadomosci2,"OFF") || Sprawdz_Tekst(cTrescWiadomosci2,"Off") ){
 			dWypelnienieProcent=0;
 			PORTA &=  ~(1<<LED);
 			ZmianaWypelnienia();
 		}
 		else{
-			if ( Sprawdz_Tekst(cTrescWiadomosci,"w ") || Sprawdz_Tekst(cTrescWiadomosci,"W ")){
-				for(iLicznikZnakow=2;cTrescWiadomosci[iLicznikZnakow]!='\0';iLicznikZnakow++){
-					cBuforDlaOdebranejLiczby[iLicznikZnakow-2]=cTrescWiadomosci[iLicznikZnakow];
+			if ( Sprawdz_Tekst(cTrescWiadomosci2,"w ") || Sprawdz_Tekst(cTrescWiadomosci2,"W ")){
+				for(iLicznikZnakow=2;cTrescWiadomosci2[iLicznikZnakow]!='\0';iLicznikZnakow++){
+					cBuforDlaOdebranejLiczby[iLicznikZnakow-2]=cTrescWiadomosci2[iLicznikZnakow];
 				}
 				cBuforDlaOdebranejLiczby[iLicznikZnakow-2]='\0'; //nowosc
 				dWypelnienieProcent=(atof(cBuforDlaOdebranejLiczby));
@@ -370,7 +414,7 @@ void WczytujDane(void){
 		    	case OCZEKIWANIE_NA_METADANE:
 		    		if ( Sprawdz_Tekst(cMetaDaneWiadomosci,"+CMGR") ){
 		    			cStan = OCZEKIWANIE_NA_TRESC;
-		    			cDane = cTrescWiadomosci;
+		    			cDane = cTrescWiadomosci2;
 		    		}
 		    		break;
 		    	case OCZEKIWANIE_NA_TRESC:
@@ -504,10 +548,10 @@ void ObslugaWyswietlacza(void){
 	}
 	else{
 		LCD_LOCATE(0,0);
-		lcd_puts(cTryb);
+		lcd_puts(cTrescWiadomosci1); //lcd_puts(cTryb);
 	}
 	LCD_LOCATE(0,1);
-	lcd_puts(cTrescWiadomosci);
+	lcd_puts(cTrescWiadomosci2);
 
 }
 
