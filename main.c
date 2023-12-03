@@ -104,7 +104,7 @@ enum Stan {OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI=0, OCZEKIWANIE_NA_METADANE=
 char iIndeks=0;
 
 int main(void){
-   //Przyciski_Init();
+   Przyciski_Init();
    TWI_inicjacja();
    //TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
    //TWI_zapis(0x01,0x24);//minut
@@ -138,7 +138,7 @@ int main(void){
   Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
 
   while(1){
-	  _delay_ms(1000);
+	  _delay_ms(100);
 	  TimeTWIRead();
 	  sprintf(cTrescWiadomosci1,"ON%d:%d OFF%d:%d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
 	  sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d ",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
@@ -152,9 +152,9 @@ int main(void){
 		  PORTA &=  ~(1<<LED);
 	  }
 
-	  WczytujDane();
-	  SprawdzDane();
-	  //Obsluga_Przyciskow();
+	  //WczytujDane();
+	  //SprawdzDane();
+	  Obsluga_Przyciskow();
    }
    return 0;
 }
@@ -256,62 +256,66 @@ void Wyswietlanie(char cDane[]){
 	lcd_puts(cLinijka2);
 }
 
-void Obsluga_Przyciskow(void){
+void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy są wciśniete czy nie wiec de facto mozemy reagować tylko na zbocze.
 	ucWejsciaPrzyciskowNowe = WEJSCIA_PRZYCISKOW;
-	//USART_Wyslij("ATD+48695316105;");
 
-	if((ucWejsciaPrzyciskowNowe & PRZYCISK_ZATRZYMAJ) ==0){
-		eAktywnyTryb = PRE_STOP;
-		sprintf(cTryb,"STOP");
-		ON_minuta++;
+	if( (ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) != (ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ){ //jesli sie zmienił stan
+	//if((ucWejsciaPrzyciskowNowe & PRZYCISK_ZATRZYMAJ) ==0){
+		//eAktywnyTryb = PRE_STOP;
+		//sprintf(cTryb,"STOP");
+
+		ON_minuta=ON_minuta+1;
+		if(ON_minuta>=59){
+			ON_minuta = 0;
+		}
 	}
 
-	if( ((ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) ==0) && (ucWejsciaPrzyciskowNowe==ucWejsciaPrzyciskowStare) ){ //przytrzymano
-		uiLicznikTrzymania++;
-		if(uiLicznikTrzymania>=PROG_TRZYMANIA){
-			uiLicznikTrzymania=0;
-			uiLicznikMrugania=0;
-			switch(eAktywnyTryb){
-				case PRE_GSM:
-					eAktywnyTryb=GSM;
-					break;
-				case PRE_BT:
-					eAktywnyTryb=BT;
-					break;
-				case PRE_POT:
-					eAktywnyTryb=POT;
-					break;
-				case PRE_STOP:
-					eAktywnyTryb=STOP;
-					break;
-			}
-		}
-		//Wystartowanie_Trybu(eAktywnyTryb);
-	}
-	else if(( ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ==0){ //puszczono przycisk (krotkie nacisniecie)
-		switch(eAktywnyTryb){
-			case PRE_STOP:
-				eAktywnyTryb=PRE_GSM;
-				sprintf(cTryb,"GSM CONTROL");
-				break;
-			case PRE_GSM:
-				eAktywnyTryb=PRE_BT;
-				sprintf(cTryb,"BT CONTROL");
-				break;
-			case PRE_BT:
-				eAktywnyTryb=PRE_POT;
-				sprintf(cTryb,"POT CONTROL");
-				break;
-			case PRE_POT:
-				eAktywnyTryb=PRE_STOP;
-				sprintf(cTryb,"STOP");
-				break;
-		}
-		uiLicznikTrzymania=0;
-	}
-	else{ //nie nacisnieto PRZYCISK_TRYBU
-		uiLicznikTrzymania=0;
-	}
+//	if( ((ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) ==0) && (ucWejsciaPrzyciskowNowe==ucWejsciaPrzyciskowStare) ){ //przytrzymano
+//		uiLicznikTrzymania++;
+//		if(uiLicznikTrzymania>=PROG_TRZYMANIA){
+//			uiLicznikTrzymania=0;
+//			uiLicznikMrugania=0;
+//			switch(eAktywnyTryb){
+//				case PRE_GSM:
+//					eAktywnyTryb=GSM;
+//					break;
+//				case PRE_BT:
+//					eAktywnyTryb=BT;
+//					break;
+//				case PRE_POT:
+//					eAktywnyTryb=POT;
+//					break;
+//				case PRE_STOP:
+//					eAktywnyTryb=STOP;
+//					break;
+//			}
+//		}
+//		//Wystartowanie_Trybu(eAktywnyTryb);
+//	}
+//	else if(( ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ==0){ //puszczono przycisk (krotkie nacisniecie)
+//		switch(eAktywnyTryb){
+//			case PRE_STOP:
+//				eAktywnyTryb=PRE_GSM;
+//				sprintf(cTryb,"GSM CONTROL");
+//				break;
+//			case PRE_GSM:
+//				eAktywnyTryb=PRE_BT;
+//				sprintf(cTryb,"BT CONTROL");
+//				break;
+//			case PRE_BT:
+//				eAktywnyTryb=PRE_POT;
+//				sprintf(cTryb,"POT CONTROL");
+//				break;
+//			case PRE_POT:
+//				eAktywnyTryb=PRE_STOP;
+//				sprintf(cTryb,"STOP");
+//				break;
+//		}
+//		uiLicznikTrzymania=0;
+//	}
+//	else{ //nie nacisnieto PRZYCISK_TRYBU
+//		uiLicznikTrzymania=0;
+//	}
 	ucWejsciaPrzyciskowStare=ucWejsciaPrzyciskowNowe;
 }
 
