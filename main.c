@@ -154,7 +154,7 @@ int main(void){
 
 	  WczytujDane();
 	  SprawdzDane();
-	  Obsluga_Przyciskow();
+	  //Obsluga_Przyciskow();
    }
    return 0;
 }
@@ -263,6 +263,7 @@ void Obsluga_Przyciskow(void){
 	if((ucWejsciaPrzyciskowNowe & PRZYCISK_ZATRZYMAJ) ==0){
 		eAktywnyTryb = PRE_STOP;
 		sprintf(cTryb,"STOP");
+		ON_minuta++;
 	}
 
 	if( ((ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) ==0) && (ucWejsciaPrzyciskowNowe==ucWejsciaPrzyciskowStare) ){ //przytrzymano
