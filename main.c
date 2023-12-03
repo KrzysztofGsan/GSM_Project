@@ -106,9 +106,9 @@ char iIndeks=0;
 int main(void){
    Przyciski_Init();
    TWI_inicjacja();
-   //TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
-   //TWI_zapis(0x01,0x24);//minut
-   //TWI_zapis(0x02,0x13);//godzina
+//   TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
+//   TWI_zapis(0x01,0x55);//minut
+//   TWI_zapis(0x02,0x20);//godzina
    PWM_inicjacja();
    Timer0_inicjacja();
    iLicznikDanych=0;
@@ -140,8 +140,8 @@ int main(void){
   while(1){
 	  _delay_ms(100);
 	  TimeTWIRead();
-	  sprintf(cTrescWiadomosci1,"ON%d:%d OFF%d:%d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
-	  sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d ",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
+	  sprintf(cTrescWiadomosci1,"ON%02d:%02d OFF%02d:%02d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
+	  sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
 	  ObslugaWyswietlacza();
 	  if ( TimeMatchCheck(ON_godzina,ON_minuta) == TRUE){
 		  PORTC |= (1<<PRZEKAZNIK);

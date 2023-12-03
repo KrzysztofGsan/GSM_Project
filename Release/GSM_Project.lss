@@ -5,21 +5,21 @@ Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
   0 .text         00001b0e  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .data         00000232  00800060  00001b0e  00001ba2  2**0
+  1 .data         0000023a  00800060  00001b0e  00001ba2  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .bss          000000e0  00800292  00800292  00001dd4  2**0
+  2 .bss          000000e0  0080029a  0080029a  00001ddc  2**0
                   ALLOC
-  3 .comment      00000011  00000000  00000000  00001dd4  2**0
+  3 .comment      00000011  00000000  00000000  00001ddc  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00001de8  2**2
+  4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00001df0  2**2
                   CONTENTS, READONLY
-  5 .debug_info   0000052e  00000000  00000000  00001e24  2**0
+  5 .debug_info   0000052e  00000000  00000000  00001e2c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 000004e7  00000000  00000000  00002352  2**0
+  6 .debug_abbrev 000004e7  00000000  00000000  0000235a  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   0000001a  00000000  00000000  00002839  2**0
+  7 .debug_line   0000001a  00000000  00000000  00002841  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_str    000001af  00000000  00000000  00002853  2**0
+  8 .debug_str    000001af  00000000  00000000  0000285b  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -83,13 +83,13 @@ Disassembly of section .text:
       a6:	02 c0       	rjmp	.+4      	; 0xac <__do_copy_data+0x10>
       a8:	05 90       	lpm	r0, Z+
       aa:	0d 92       	st	X+, r0
-      ac:	a2 39       	cpi	r26, 0x92	; 146
+      ac:	aa 39       	cpi	r26, 0x9A	; 154
       ae:	b1 07       	cpc	r27, r17
       b0:	d9 f7       	brne	.-10     	; 0xa8 <__do_copy_data+0xc>
 
 000000b2 <__do_clear_bss>:
       b2:	23 e0       	ldi	r18, 0x03	; 3
-      b4:	a2 e9       	ldi	r26, 0x92	; 146
+      b4:	aa e9       	ldi	r26, 0x9A	; 154
       b6:	b2 e0       	ldi	r27, 0x02	; 2
       b8:	01 c0       	rjmp	.+2      	; 0xbc <.do_clear_bss_start>
 
@@ -97,7 +97,7 @@ Disassembly of section .text:
       ba:	1d 92       	st	X+, r1
 
 000000bc <.do_clear_bss_start>:
-      bc:	a2 37       	cpi	r26, 0x72	; 114
+      bc:	aa 37       	cpi	r26, 0x7A	; 122
       be:	b2 07       	cpc	r27, r18
       c0:	e1 f7       	brne	.-8      	; 0xba <.do_clear_bss_loop>
       c2:	0e 94 e6 05 	call	0xbcc	; 0xbcc <main>
@@ -331,7 +331,7 @@ Disassembly of section .text:
      326:	d0 e0       	ldi	r29, 0x00	; 0
      328:	be 01       	movw	r22, r28
      32a:	0e 94 ca 06 	call	0xd94	; 0xd94 <__divmodhi4>
-     32e:	80 91 1f 03 	lds	r24, 0x031F	; 0x80031f <godziny_dziesiatki>
+     32e:	80 91 27 03 	lds	r24, 0x0327	; 0x800327 <godziny_dziesiatki>
      332:	90 e0       	ldi	r25, 0x00	; 0
      334:	68 17       	cp	r22, r24
      336:	79 07       	cpc	r23, r25
@@ -344,7 +344,7 @@ Disassembly of section .text:
      344:	11 24       	eor	r1, r1
      346:	e8 0f       	add	r30, r24
      348:	f9 1f       	adc	r31, r25
-     34a:	80 91 b2 02 	lds	r24, 0x02B2	; 0x8002b2 <godziny_jednostki>
+     34a:	80 91 ba 02 	lds	r24, 0x02BA	; 0x8002ba <godziny_jednostki>
      34e:	90 e0       	ldi	r25, 0x00	; 0
      350:	e8 17       	cp	r30, r24
      352:	f9 07       	cpc	r31, r25
@@ -352,7 +352,7 @@ Disassembly of section .text:
      356:	c9 01       	movw	r24, r18
      358:	be 01       	movw	r22, r28
      35a:	0e 94 ca 06 	call	0xd94	; 0xd94 <__divmodhi4>
-     35e:	80 91 1d 03 	lds	r24, 0x031D	; 0x80031d <minuty_dziesiatki>
+     35e:	80 91 25 03 	lds	r24, 0x0325	; 0x800325 <minuty_dziesiatki>
      362:	90 e0       	ldi	r25, 0x00	; 0
      364:	68 17       	cp	r22, r24
      366:	79 07       	cpc	r23, r25
@@ -364,7 +364,7 @@ Disassembly of section .text:
      372:	11 24       	eor	r1, r1
      374:	28 0f       	add	r18, r24
      376:	39 1f       	adc	r19, r25
-     378:	40 91 b7 02 	lds	r20, 0x02B7	; 0x8002b7 <minuty_jednostki>
+     378:	40 91 bf 02 	lds	r20, 0x02BF	; 0x8002bf <minuty_jednostki>
      37c:	50 e0       	ldi	r21, 0x00	; 0
      37e:	81 e0       	ldi	r24, 0x01	; 1
      380:	24 17       	cp	r18, r20
@@ -378,12 +378,12 @@ Disassembly of section .text:
 0000038e <Wyswietlanie>:
      38e:	cf 93       	push	r28
      390:	df 93       	push	r29
-     392:	10 92 34 03 	sts	0x0334, r1	; 0x800334 <cLinijka1>
-     396:	10 92 22 03 	sts	0x0322, r1	; 0x800322 <cLinijka2>
+     392:	10 92 3c 03 	sts	0x033C, r1	; 0x80033c <cLinijka1>
+     396:	10 92 2a 03 	sts	0x032A, r1	; 0x80032a <cLinijka2>
      39a:	ec 01       	movw	r28, r24
-     39c:	e4 e3       	ldi	r30, 0x34	; 52
+     39c:	ec e3       	ldi	r30, 0x3C	; 60
      39e:	f3 e0       	ldi	r31, 0x03	; 3
-     3a0:	a2 e1       	ldi	r26, 0x12	; 18
+     3a0:	aa e1       	ldi	r26, 0x1A	; 26
      3a2:	b3 e0       	ldi	r27, 0x03	; 3
      3a4:	20 e0       	ldi	r18, 0x00	; 0
      3a6:	30 e0       	ldi	r19, 0x00	; 0
@@ -409,13 +409,13 @@ Disassembly of section .text:
      3d0:	60 e0       	ldi	r22, 0x00	; 0
      3d2:	80 e8       	ldi	r24, 0x80	; 128
      3d4:	0e 94 67 00 	call	0xce	; 0xce <WriteToLCD>
-     3d8:	84 e3       	ldi	r24, 0x34	; 52
+     3d8:	8c e3       	ldi	r24, 0x3C	; 60
      3da:	93 e0       	ldi	r25, 0x03	; 3
      3dc:	0e 94 7a 01 	call	0x2f4	; 0x2f4 <lcd_puts>
      3e0:	60 e0       	ldi	r22, 0x00	; 0
      3e2:	80 ec       	ldi	r24, 0xC0	; 192
      3e4:	0e 94 67 00 	call	0xce	; 0xce <WriteToLCD>
-     3e8:	82 e2       	ldi	r24, 0x22	; 34
+     3e8:	8a e2       	ldi	r24, 0x2A	; 42
      3ea:	93 e0       	ldi	r25, 0x03	; 3
      3ec:	df 91       	pop	r29
      3ee:	cf 91       	pop	r28
@@ -429,8 +429,8 @@ Disassembly of section .text:
 000003fe <Obsluga_Przyciskow>:
      3fe:	80 b3       	in	r24, 0x10	; 16
      400:	8c 70       	andi	r24, 0x0C	; 12
-     402:	80 93 9c 02 	sts	0x029C, r24	; 0x80029c <ucWejsciaPrzyciskowNowe>
-     406:	90 91 9b 02 	lds	r25, 0x029B	; 0x80029b <ucWejsciaPrzyciskowStare>
+     402:	80 93 a4 02 	sts	0x02A4, r24	; 0x8002a4 <ucWejsciaPrzyciskowNowe>
+     406:	90 91 a3 02 	lds	r25, 0x02A3	; 0x8002a3 <ucWejsciaPrzyciskowStare>
      40a:	98 27       	eor	r25, r24
      40c:	93 ff       	sbrs	r25, 3
      40e:	0a c0       	rjmp	.+20     	; 0x424 <__DATA_REGION_LENGTH__+0x24>
@@ -441,7 +441,7 @@ Disassembly of section .text:
      41a:	90 93 bd 01 	sts	0x01BD, r25	; 0x8001bd <ON_minuta>
      41e:	02 c0       	rjmp	.+4      	; 0x424 <__DATA_REGION_LENGTH__+0x24>
      420:	10 92 bd 01 	sts	0x01BD, r1	; 0x8001bd <ON_minuta>
-     424:	80 93 9b 02 	sts	0x029B, r24	; 0x80029b <ucWejsciaPrzyciskowStare>
+     424:	80 93 a3 02 	sts	0x02A3, r24	; 0x8002a3 <ucWejsciaPrzyciskowStare>
      428:	08 95       	ret
 
 0000042a <Przyciski_Init>:
@@ -454,10 +454,10 @@ Disassembly of section .text:
      436:	08 95       	ret
 
 00000438 <USART_Init>:
-     438:	10 92 b9 02 	sts	0x02B9, r1	; 0x8002b9 <viIndeksZapisu+0x1>
-     43c:	10 92 b8 02 	sts	0x02B8, r1	; 0x8002b8 <viIndeksZapisu>
-     440:	10 92 47 03 	sts	0x0347, r1	; 0x800347 <viIndeksOdczytu+0x1>
-     444:	10 92 46 03 	sts	0x0346, r1	; 0x800346 <viIndeksOdczytu>
+     438:	10 92 c1 02 	sts	0x02C1, r1	; 0x8002c1 <viIndeksZapisu+0x1>
+     43c:	10 92 c0 02 	sts	0x02C0, r1	; 0x8002c0 <viIndeksZapisu>
+     440:	10 92 4f 03 	sts	0x034F, r1	; 0x80034f <viIndeksOdczytu+0x1>
+     444:	10 92 4e 03 	sts	0x034E, r1	; 0x80034e <viIndeksOdczytu>
      448:	10 bc       	out	0x20, r1	; 32
      44a:	83 e3       	ldi	r24, 0x33	; 51
      44c:	89 b9       	out	0x09, r24	; 9
@@ -499,31 +499,31 @@ Disassembly of section .text:
      48c:	9f 93       	push	r25
      48e:	ef 93       	push	r30
      490:	ff 93       	push	r31
-     492:	80 91 46 03 	lds	r24, 0x0346	; 0x800346 <viIndeksOdczytu>
-     496:	90 91 47 03 	lds	r25, 0x0347	; 0x800347 <viIndeksOdczytu+0x1>
-     49a:	20 91 b8 02 	lds	r18, 0x02B8	; 0x8002b8 <viIndeksZapisu>
-     49e:	30 91 b9 02 	lds	r19, 0x02B9	; 0x8002b9 <viIndeksZapisu+0x1>
+     492:	80 91 4e 03 	lds	r24, 0x034E	; 0x80034e <viIndeksOdczytu>
+     496:	90 91 4f 03 	lds	r25, 0x034F	; 0x80034f <viIndeksOdczytu+0x1>
+     49a:	20 91 c0 02 	lds	r18, 0x02C0	; 0x8002c0 <viIndeksZapisu>
+     49e:	30 91 c1 02 	lds	r19, 0x02C1	; 0x8002c1 <viIndeksZapisu+0x1>
      4a2:	01 97       	sbiw	r24, 0x01	; 1
      4a4:	82 17       	cp	r24, r18
      4a6:	93 07       	cpc	r25, r19
      4a8:	d9 f0       	breq	.+54     	; 0x4e0 <__vector_11+0x64>
-     4aa:	e0 91 b8 02 	lds	r30, 0x02B8	; 0x8002b8 <viIndeksZapisu>
-     4ae:	f0 91 b9 02 	lds	r31, 0x02B9	; 0x8002b9 <viIndeksZapisu+0x1>
+     4aa:	e0 91 c0 02 	lds	r30, 0x02C0	; 0x8002c0 <viIndeksZapisu>
+     4ae:	f0 91 c1 02 	lds	r31, 0x02C1	; 0x8002c1 <viIndeksZapisu+0x1>
      4b2:	8c b1       	in	r24, 0x0c	; 12
-     4b4:	e6 54       	subi	r30, 0x46	; 70
+     4b4:	ee 53       	subi	r30, 0x3E	; 62
      4b6:	fd 4f       	sbci	r31, 0xFD	; 253
      4b8:	80 83       	st	Z, r24
-     4ba:	80 91 b8 02 	lds	r24, 0x02B8	; 0x8002b8 <viIndeksZapisu>
-     4be:	90 91 b9 02 	lds	r25, 0x02B9	; 0x8002b9 <viIndeksZapisu+0x1>
+     4ba:	80 91 c0 02 	lds	r24, 0x02C0	; 0x8002c0 <viIndeksZapisu>
+     4be:	90 91 c1 02 	lds	r25, 0x02C1	; 0x8002c1 <viIndeksZapisu+0x1>
      4c2:	01 96       	adiw	r24, 0x01	; 1
-     4c4:	90 93 b9 02 	sts	0x02B9, r25	; 0x8002b9 <viIndeksZapisu+0x1>
-     4c8:	80 93 b8 02 	sts	0x02B8, r24	; 0x8002b8 <viIndeksZapisu>
-     4cc:	80 91 b8 02 	lds	r24, 0x02B8	; 0x8002b8 <viIndeksZapisu>
-     4d0:	90 91 b9 02 	lds	r25, 0x02B9	; 0x8002b9 <viIndeksZapisu+0x1>
+     4c4:	90 93 c1 02 	sts	0x02C1, r25	; 0x8002c1 <viIndeksZapisu+0x1>
+     4c8:	80 93 c0 02 	sts	0x02C0, r24	; 0x8002c0 <viIndeksZapisu>
+     4cc:	80 91 c0 02 	lds	r24, 0x02C0	; 0x8002c0 <viIndeksZapisu>
+     4d0:	90 91 c1 02 	lds	r25, 0x02C1	; 0x8002c1 <viIndeksZapisu+0x1>
      4d4:	80 97       	sbiw	r24, 0x20	; 32
      4d6:	24 f0       	brlt	.+8      	; 0x4e0 <__vector_11+0x64>
-     4d8:	10 92 b9 02 	sts	0x02B9, r1	; 0x8002b9 <viIndeksZapisu+0x1>
-     4dc:	10 92 b8 02 	sts	0x02B8, r1	; 0x8002b8 <viIndeksZapisu>
+     4d8:	10 92 c1 02 	sts	0x02C1, r1	; 0x8002c1 <viIndeksZapisu+0x1>
+     4dc:	10 92 c0 02 	sts	0x02C0, r1	; 0x8002c0 <viIndeksZapisu>
      4e0:	ff 91       	pop	r31
      4e2:	ef 91       	pop	r30
      4e4:	9f 91       	pop	r25
@@ -554,17 +554,17 @@ Disassembly of section .text:
      512:	08 95       	ret
 
 00000514 <ZapewnijMiejsceDlaKolejnejWiadomosci>:
-     514:	80 91 92 02 	lds	r24, 0x0292	; 0x800292 <__data_end>
+     514:	80 91 9a 02 	lds	r24, 0x029A	; 0x80029a <__data_end>
      518:	86 34       	cpi	r24, 0x46	; 70
      51a:	30 f0       	brcs	.+12     	; 0x528 <ZapewnijMiejsceDlaKolejnejWiadomosci+0x14>
      51c:	81 e0       	ldi	r24, 0x01	; 1
-     51e:	80 93 1e 03 	sts	0x031E, r24	; 0x80031e <cFlagaZapelnieniaPamieci>
+     51e:	80 93 26 03 	sts	0x0326, r24	; 0x800326 <cFlagaZapelnieniaPamieci>
      522:	84 e1       	ldi	r24, 0x14	; 20
-     524:	80 93 92 02 	sts	0x0292, r24	; 0x800292 <__data_end>
-     528:	80 91 1e 03 	lds	r24, 0x031E	; 0x80031e <cFlagaZapelnieniaPamieci>
+     524:	80 93 9a 02 	sts	0x029A, r24	; 0x80029a <__data_end>
+     528:	80 91 26 03 	lds	r24, 0x0326	; 0x800326 <cFlagaZapelnieniaPamieci>
      52c:	81 30       	cpi	r24, 0x01	; 1
      52e:	d1 f4       	brne	.+52     	; 0x564 <ZapewnijMiejsceDlaKolejnejWiadomosci+0x50>
-     530:	80 91 92 02 	lds	r24, 0x0292	; 0x800292 <__data_end>
+     530:	80 91 9a 02 	lds	r24, 0x029A	; 0x80029a <__data_end>
      534:	90 e0       	ldi	r25, 0x00	; 0
      536:	01 96       	adiw	r24, 0x01	; 1
      538:	9f 93       	push	r25
@@ -596,10 +596,10 @@ Disassembly of section .text:
      56c:	ff 92       	push	r15
      56e:	8f e3       	ldi	r24, 0x3F	; 63
      570:	9f e1       	ldi	r25, 0x1F	; 31
-     572:	90 93 b6 02 	sts	0x02B6, r25	; 0x8002b6 <uiICR_Prim+0x1>
-     576:	80 93 b5 02 	sts	0x02B5, r24	; 0x8002b5 <uiICR_Prim>
-     57a:	20 91 b5 02 	lds	r18, 0x02B5	; 0x8002b5 <uiICR_Prim>
-     57e:	30 91 b6 02 	lds	r19, 0x02B6	; 0x8002b6 <uiICR_Prim+0x1>
+     572:	90 93 be 02 	sts	0x02BE, r25	; 0x8002be <uiICR_Prim+0x1>
+     576:	80 93 bd 02 	sts	0x02BD, r24	; 0x8002bd <uiICR_Prim>
+     57a:	20 91 bd 02 	lds	r18, 0x02BD	; 0x8002bd <uiICR_Prim>
+     57e:	30 91 be 02 	lds	r19, 0x02BE	; 0x8002be <uiICR_Prim+0x1>
      582:	2f 5f       	subi	r18, 0xFF	; 255
      584:	3f 4f       	sbci	r19, 0xFF	; 255
      586:	40 e0       	ldi	r20, 0x00	; 0
@@ -609,23 +609,23 @@ Disassembly of section .text:
      58e:	8a e7       	ldi	r24, 0x7A	; 122
      590:	90 e0       	ldi	r25, 0x00	; 0
      592:	0e 94 de 06 	call	0xdbc	; 0xdbc <__udivmodsi4>
-     596:	30 93 db 02 	sts	0x02DB, r19	; 0x8002db <iCzestotliwosc+0x1>
-     59a:	20 93 da 02 	sts	0x02DA, r18	; 0x8002da <iCzestotliwosc>
-     59e:	10 92 4b 03 	sts	0x034B, r1	; 0x80034b <dWypelnienieProcent>
-     5a2:	10 92 4c 03 	sts	0x034C, r1	; 0x80034c <dWypelnienieProcent+0x1>
-     5a6:	10 92 4d 03 	sts	0x034D, r1	; 0x80034d <dWypelnienieProcent+0x2>
-     5aa:	10 92 4e 03 	sts	0x034E, r1	; 0x80034e <dWypelnienieProcent+0x3>
+     596:	30 93 e3 02 	sts	0x02E3, r19	; 0x8002e3 <iCzestotliwosc+0x1>
+     59a:	20 93 e2 02 	sts	0x02E2, r18	; 0x8002e2 <iCzestotliwosc>
+     59e:	10 92 53 03 	sts	0x0353, r1	; 0x800353 <dWypelnienieProcent>
+     5a2:	10 92 54 03 	sts	0x0354, r1	; 0x800354 <dWypelnienieProcent+0x1>
+     5a6:	10 92 55 03 	sts	0x0355, r1	; 0x800355 <dWypelnienieProcent+0x2>
+     5aa:	10 92 56 03 	sts	0x0356, r1	; 0x800356 <dWypelnienieProcent+0x3>
      5ae:	8d 9a       	sbi	0x11, 5	; 17
-     5b0:	80 91 b5 02 	lds	r24, 0x02B5	; 0x8002b5 <uiICR_Prim>
-     5b4:	90 91 b6 02 	lds	r25, 0x02B6	; 0x8002b6 <uiICR_Prim+0x1>
+     5b0:	80 91 bd 02 	lds	r24, 0x02BD	; 0x8002bd <uiICR_Prim>
+     5b4:	90 91 be 02 	lds	r25, 0x02BE	; 0x8002be <uiICR_Prim+0x1>
      5b8:	97 bd       	out	0x27, r25	; 39
      5ba:	86 bd       	out	0x26, r24	; 38
-     5bc:	60 91 b5 02 	lds	r22, 0x02B5	; 0x8002b5 <uiICR_Prim>
-     5c0:	70 91 b6 02 	lds	r23, 0x02B6	; 0x8002b6 <uiICR_Prim+0x1>
-     5c4:	c0 90 4b 03 	lds	r12, 0x034B	; 0x80034b <dWypelnienieProcent>
-     5c8:	d0 90 4c 03 	lds	r13, 0x034C	; 0x80034c <dWypelnienieProcent+0x1>
-     5cc:	e0 90 4d 03 	lds	r14, 0x034D	; 0x80034d <dWypelnienieProcent+0x2>
-     5d0:	f0 90 4e 03 	lds	r15, 0x034E	; 0x80034e <dWypelnienieProcent+0x3>
+     5bc:	60 91 bd 02 	lds	r22, 0x02BD	; 0x8002bd <uiICR_Prim>
+     5c0:	70 91 be 02 	lds	r23, 0x02BE	; 0x8002be <uiICR_Prim+0x1>
+     5c4:	c0 90 53 03 	lds	r12, 0x0353	; 0x800353 <dWypelnienieProcent>
+     5c8:	d0 90 54 03 	lds	r13, 0x0354	; 0x800354 <dWypelnienieProcent+0x1>
+     5cc:	e0 90 55 03 	lds	r14, 0x0355	; 0x800355 <dWypelnienieProcent+0x2>
+     5d0:	f0 90 56 03 	lds	r15, 0x0356	; 0x800356 <dWypelnienieProcent+0x3>
      5d4:	80 e0       	ldi	r24, 0x00	; 0
      5d6:	90 e0       	ldi	r25, 0x00	; 0
      5d8:	0e 94 ba 07 	call	0xf74	; 0xf74 <__floatunsisf>
@@ -668,10 +668,10 @@ Disassembly of section .text:
      622:	df 92       	push	r13
      624:	ef 92       	push	r14
      626:	ff 92       	push	r15
-     628:	60 91 4b 03 	lds	r22, 0x034B	; 0x80034b <dWypelnienieProcent>
-     62c:	70 91 4c 03 	lds	r23, 0x034C	; 0x80034c <dWypelnienieProcent+0x1>
-     630:	80 91 4d 03 	lds	r24, 0x034D	; 0x80034d <dWypelnienieProcent+0x2>
-     634:	90 91 4e 03 	lds	r25, 0x034E	; 0x80034e <dWypelnienieProcent+0x3>
+     628:	60 91 53 03 	lds	r22, 0x0353	; 0x800353 <dWypelnienieProcent>
+     62c:	70 91 54 03 	lds	r23, 0x0354	; 0x800354 <dWypelnienieProcent+0x1>
+     630:	80 91 55 03 	lds	r24, 0x0355	; 0x800355 <dWypelnienieProcent+0x2>
+     634:	90 91 56 03 	lds	r25, 0x0356	; 0x800356 <dWypelnienieProcent+0x3>
      638:	20 e0       	ldi	r18, 0x00	; 0
      63a:	30 e0       	ldi	r19, 0x00	; 0
      63c:	48 ec       	ldi	r20, 0xC8	; 200
@@ -683,33 +683,33 @@ Disassembly of section .text:
      64a:	90 e0       	ldi	r25, 0x00	; 0
      64c:	a8 ec       	ldi	r26, 0xC8	; 200
      64e:	b2 e4       	ldi	r27, 0x42	; 66
-     650:	80 93 4b 03 	sts	0x034B, r24	; 0x80034b <dWypelnienieProcent>
-     654:	90 93 4c 03 	sts	0x034C, r25	; 0x80034c <dWypelnienieProcent+0x1>
-     658:	a0 93 4d 03 	sts	0x034D, r26	; 0x80034d <dWypelnienieProcent+0x2>
-     65c:	b0 93 4e 03 	sts	0x034E, r27	; 0x80034e <dWypelnienieProcent+0x3>
-     660:	60 91 4b 03 	lds	r22, 0x034B	; 0x80034b <dWypelnienieProcent>
-     664:	70 91 4c 03 	lds	r23, 0x034C	; 0x80034c <dWypelnienieProcent+0x1>
-     668:	80 91 4d 03 	lds	r24, 0x034D	; 0x80034d <dWypelnienieProcent+0x2>
-     66c:	90 91 4e 03 	lds	r25, 0x034E	; 0x80034e <dWypelnienieProcent+0x3>
+     650:	80 93 53 03 	sts	0x0353, r24	; 0x800353 <dWypelnienieProcent>
+     654:	90 93 54 03 	sts	0x0354, r25	; 0x800354 <dWypelnienieProcent+0x1>
+     658:	a0 93 55 03 	sts	0x0355, r26	; 0x800355 <dWypelnienieProcent+0x2>
+     65c:	b0 93 56 03 	sts	0x0356, r27	; 0x800356 <dWypelnienieProcent+0x3>
+     660:	60 91 53 03 	lds	r22, 0x0353	; 0x800353 <dWypelnienieProcent>
+     664:	70 91 54 03 	lds	r23, 0x0354	; 0x800354 <dWypelnienieProcent+0x1>
+     668:	80 91 55 03 	lds	r24, 0x0355	; 0x800355 <dWypelnienieProcent+0x2>
+     66c:	90 91 56 03 	lds	r25, 0x0356	; 0x800356 <dWypelnienieProcent+0x3>
      670:	20 e0       	ldi	r18, 0x00	; 0
      672:	30 e0       	ldi	r19, 0x00	; 0
      674:	a9 01       	movw	r20, r18
      676:	0e 94 14 07 	call	0xe28	; 0xe28 <__cmpsf2>
      67a:	18 16       	cp	r1, r24
      67c:	5c f0       	brlt	.+22     	; 0x694 <ZmianaWypelnienia+0x74>
-     67e:	10 92 4b 03 	sts	0x034B, r1	; 0x80034b <dWypelnienieProcent>
-     682:	10 92 4c 03 	sts	0x034C, r1	; 0x80034c <dWypelnienieProcent+0x1>
-     686:	10 92 4d 03 	sts	0x034D, r1	; 0x80034d <dWypelnienieProcent+0x2>
-     68a:	10 92 4e 03 	sts	0x034E, r1	; 0x80034e <dWypelnienieProcent+0x3>
+     67e:	10 92 53 03 	sts	0x0353, r1	; 0x800353 <dWypelnienieProcent>
+     682:	10 92 54 03 	sts	0x0354, r1	; 0x800354 <dWypelnienieProcent+0x1>
+     686:	10 92 55 03 	sts	0x0355, r1	; 0x800355 <dWypelnienieProcent+0x2>
+     68a:	10 92 56 03 	sts	0x0356, r1	; 0x800356 <dWypelnienieProcent+0x3>
      68e:	8f b5       	in	r24, 0x2f	; 47
      690:	8f 77       	andi	r24, 0x7F	; 127
      692:	20 c0       	rjmp	.+64     	; 0x6d4 <ZmianaWypelnienia+0xb4>
-     694:	60 91 b5 02 	lds	r22, 0x02B5	; 0x8002b5 <uiICR_Prim>
-     698:	70 91 b6 02 	lds	r23, 0x02B6	; 0x8002b6 <uiICR_Prim+0x1>
-     69c:	c0 90 4b 03 	lds	r12, 0x034B	; 0x80034b <dWypelnienieProcent>
-     6a0:	d0 90 4c 03 	lds	r13, 0x034C	; 0x80034c <dWypelnienieProcent+0x1>
-     6a4:	e0 90 4d 03 	lds	r14, 0x034D	; 0x80034d <dWypelnienieProcent+0x2>
-     6a8:	f0 90 4e 03 	lds	r15, 0x034E	; 0x80034e <dWypelnienieProcent+0x3>
+     694:	60 91 bd 02 	lds	r22, 0x02BD	; 0x8002bd <uiICR_Prim>
+     698:	70 91 be 02 	lds	r23, 0x02BE	; 0x8002be <uiICR_Prim+0x1>
+     69c:	c0 90 53 03 	lds	r12, 0x0353	; 0x800353 <dWypelnienieProcent>
+     6a0:	d0 90 54 03 	lds	r13, 0x0354	; 0x800354 <dWypelnienieProcent+0x1>
+     6a4:	e0 90 55 03 	lds	r14, 0x0355	; 0x800355 <dWypelnienieProcent+0x2>
+     6a8:	f0 90 56 03 	lds	r15, 0x0356	; 0x800356 <dWypelnienieProcent+0x3>
      6ac:	80 e0       	ldi	r24, 0x00	; 0
      6ae:	90 e0       	ldi	r25, 0x00	; 0
      6b0:	0e 94 ba 07 	call	0xf74	; 0xf74 <__floatunsisf>
@@ -744,7 +744,7 @@ Disassembly of section .text:
      6ee:	de bf       	out	0x3e, r29	; 62
      6f0:	0f be       	out	0x3f, r0	; 63
      6f2:	cd bf       	out	0x3d, r28	; 61
-     6f4:	80 91 45 03 	lds	r24, 0x0345	; 0x800345 <cStan>
+     6f4:	80 91 4d 03 	lds	r24, 0x034D	; 0x80034d <cStan>
      6f8:	83 30       	cpi	r24, 0x03	; 3
      6fa:	09 f0       	breq	.+2      	; 0x6fe <SprawdzDane+0x1e>
      6fc:	74 c0       	rjmp	.+232    	; 0x7e6 <SprawdzDane+0x106>
@@ -766,10 +766,10 @@ Disassembly of section .text:
      720:	90 e0       	ldi	r25, 0x00	; 0
      722:	a8 ec       	ldi	r26, 0xC8	; 200
      724:	b2 e4       	ldi	r27, 0x42	; 66
-     726:	80 93 4b 03 	sts	0x034B, r24	; 0x80034b <dWypelnienieProcent>
-     72a:	90 93 4c 03 	sts	0x034C, r25	; 0x80034c <dWypelnienieProcent+0x1>
-     72e:	a0 93 4d 03 	sts	0x034D, r26	; 0x80034d <dWypelnienieProcent+0x2>
-     732:	b0 93 4e 03 	sts	0x034E, r27	; 0x80034e <dWypelnienieProcent+0x3>
+     726:	80 93 53 03 	sts	0x0353, r24	; 0x800353 <dWypelnienieProcent>
+     72a:	90 93 54 03 	sts	0x0354, r25	; 0x800354 <dWypelnienieProcent+0x1>
+     72e:	a0 93 55 03 	sts	0x0355, r26	; 0x800355 <dWypelnienieProcent+0x2>
+     732:	b0 93 56 03 	sts	0x0356, r27	; 0x800356 <dWypelnienieProcent+0x3>
      736:	de 9a       	sbi	0x1b, 6	; 27
      738:	4a c0       	rjmp	.+148    	; 0x7ce <SprawdzDane+0xee>
      73a:	62 ee       	ldi	r22, 0xE2	; 226
@@ -786,10 +786,10 @@ Disassembly of section .text:
      752:	0e 94 7b 02 	call	0x4f6	; 0x4f6 <Sprawdz_Tekst>
      756:	89 2b       	or	r24, r25
      758:	51 f0       	breq	.+20     	; 0x76e <SprawdzDane+0x8e>
-     75a:	10 92 4b 03 	sts	0x034B, r1	; 0x80034b <dWypelnienieProcent>
-     75e:	10 92 4c 03 	sts	0x034C, r1	; 0x80034c <dWypelnienieProcent+0x1>
-     762:	10 92 4d 03 	sts	0x034D, r1	; 0x80034d <dWypelnienieProcent+0x2>
-     766:	10 92 4e 03 	sts	0x034E, r1	; 0x80034e <dWypelnienieProcent+0x3>
+     75a:	10 92 53 03 	sts	0x0353, r1	; 0x800353 <dWypelnienieProcent>
+     75e:	10 92 54 03 	sts	0x0354, r1	; 0x800354 <dWypelnienieProcent+0x1>
+     762:	10 92 55 03 	sts	0x0355, r1	; 0x800355 <dWypelnienieProcent+0x2>
+     766:	10 92 56 03 	sts	0x0356, r1	; 0x800356 <dWypelnienieProcent+0x3>
      76a:	de 98       	cbi	0x1b, 6	; 27
      76c:	30 c0       	rjmp	.+96     	; 0x7ce <SprawdzDane+0xee>
      76e:	6a ee       	ldi	r22, 0xEA	; 234
@@ -829,17 +829,17 @@ Disassembly of section .text:
      7b6:	f3 1f       	adc	r31, r19
      7b8:	10 82       	st	Z, r1
      7ba:	0e 94 de 08 	call	0x11bc	; 0x11bc <atof>
-     7be:	60 93 4b 03 	sts	0x034B, r22	; 0x80034b <dWypelnienieProcent>
-     7c2:	70 93 4c 03 	sts	0x034C, r23	; 0x80034c <dWypelnienieProcent+0x1>
-     7c6:	80 93 4d 03 	sts	0x034D, r24	; 0x80034d <dWypelnienieProcent+0x2>
-     7ca:	90 93 4e 03 	sts	0x034E, r25	; 0x80034e <dWypelnienieProcent+0x3>
+     7be:	60 93 53 03 	sts	0x0353, r22	; 0x800353 <dWypelnienieProcent>
+     7c2:	70 93 54 03 	sts	0x0354, r23	; 0x800354 <dWypelnienieProcent+0x1>
+     7c6:	80 93 55 03 	sts	0x0355, r24	; 0x800355 <dWypelnienieProcent+0x2>
+     7ca:	90 93 56 03 	sts	0x0356, r25	; 0x800356 <dWypelnienieProcent+0x3>
      7ce:	0e 94 10 03 	call	0x620	; 0x620 <ZmianaWypelnienia>
      7d2:	0e 94 8a 02 	call	0x514	; 0x514 <ZapewnijMiejsceDlaKolejnejWiadomosci>
-     7d6:	8f e4       	ldi	r24, 0x4F	; 79
+     7d6:	87 e5       	ldi	r24, 0x57	; 87
      7d8:	93 e0       	ldi	r25, 0x03	; 3
-     7da:	90 93 49 03 	sts	0x0349, r25	; 0x800349 <cDane+0x1>
-     7de:	80 93 48 03 	sts	0x0348, r24	; 0x800348 <cDane>
-     7e2:	10 92 45 03 	sts	0x0345, r1	; 0x800345 <cStan>
+     7da:	90 93 51 03 	sts	0x0351, r25	; 0x800351 <cDane+0x1>
+     7de:	80 93 50 03 	sts	0x0350, r24	; 0x800350 <cDane>
+     7e2:	10 92 4d 03 	sts	0x034D, r1	; 0x80034d <cStan>
      7e6:	2f 96       	adiw	r28, 0x0f	; 15
      7e8:	0f b6       	in	r0, 0x3f	; 63
      7ea:	f8 94       	cli
@@ -947,8 +947,8 @@ Disassembly of section .text:
      8aa:	11 f0       	breq	.+4      	; 0x8b0 <ObslugaWyswietlacza+0x1c>
      8ac:	88 30       	cpi	r24, 0x08	; 8
      8ae:	11 f5       	brne	.+68     	; 0x8f4 <ObslugaWyswietlacza+0x60>
-     8b0:	80 91 97 02 	lds	r24, 0x0297	; 0x800297 <uiLicznikMrugania>
-     8b4:	90 91 98 02 	lds	r25, 0x0298	; 0x800298 <uiLicznikMrugania+0x1>
+     8b0:	80 91 9f 02 	lds	r24, 0x029F	; 0x80029f <uiLicznikMrugania>
+     8b4:	90 91 a0 02 	lds	r25, 0x02A0	; 0x8002a0 <uiLicznikMrugania+0x1>
      8b8:	45 97       	sbiw	r24, 0x15	; 21
      8ba:	40 f4       	brcc	.+16     	; 0x8cc <ObslugaWyswietlacza+0x38>
      8bc:	60 e0       	ldi	r22, 0x00	; 0
@@ -957,17 +957,17 @@ Disassembly of section .text:
      8c4:	8f eb       	ldi	r24, 0xBF	; 191
      8c6:	91 e0       	ldi	r25, 0x01	; 1
      8c8:	0e 94 7a 01 	call	0x2f4	; 0x2f4 <lcd_puts>
-     8cc:	80 91 97 02 	lds	r24, 0x0297	; 0x800297 <uiLicznikMrugania>
-     8d0:	90 91 98 02 	lds	r25, 0x0298	; 0x800298 <uiLicznikMrugania+0x1>
+     8cc:	80 91 9f 02 	lds	r24, 0x029F	; 0x80029f <uiLicznikMrugania>
+     8d0:	90 91 a0 02 	lds	r25, 0x02A0	; 0x8002a0 <uiLicznikMrugania+0x1>
      8d4:	88 97       	sbiw	r24, 0x28	; 40
      8d6:	20 f0       	brcs	.+8      	; 0x8e0 <ObslugaWyswietlacza+0x4c>
-     8d8:	10 92 98 02 	sts	0x0298, r1	; 0x800298 <uiLicznikMrugania+0x1>
-     8dc:	10 92 97 02 	sts	0x0297, r1	; 0x800297 <uiLicznikMrugania>
-     8e0:	80 91 97 02 	lds	r24, 0x0297	; 0x800297 <uiLicznikMrugania>
-     8e4:	90 91 98 02 	lds	r25, 0x0298	; 0x800298 <uiLicznikMrugania+0x1>
+     8d8:	10 92 a0 02 	sts	0x02A0, r1	; 0x8002a0 <uiLicznikMrugania+0x1>
+     8dc:	10 92 9f 02 	sts	0x029F, r1	; 0x80029f <uiLicznikMrugania>
+     8e0:	80 91 9f 02 	lds	r24, 0x029F	; 0x80029f <uiLicznikMrugania>
+     8e4:	90 91 a0 02 	lds	r25, 0x02A0	; 0x8002a0 <uiLicznikMrugania+0x1>
      8e8:	01 96       	adiw	r24, 0x01	; 1
-     8ea:	90 93 98 02 	sts	0x0298, r25	; 0x800298 <uiLicznikMrugania+0x1>
-     8ee:	80 93 97 02 	sts	0x0297, r24	; 0x800297 <uiLicznikMrugania>
+     8ea:	90 93 a0 02 	sts	0x02A0, r25	; 0x8002a0 <uiLicznikMrugania+0x1>
+     8ee:	80 93 9f 02 	sts	0x029F, r24	; 0x80029f <uiLicznikMrugania>
      8f2:	08 c0       	rjmp	.+16     	; 0x904 <ObslugaWyswietlacza+0x70>
      8f4:	60 e0       	ldi	r22, 0x00	; 0
      8f6:	80 e8       	ldi	r24, 0x80	; 128
@@ -1022,55 +1022,55 @@ Disassembly of section .text:
 0000095c <WczytujDane>:
      95c:	cf 93       	push	r28
      95e:	df 93       	push	r29
-     960:	20 91 46 03 	lds	r18, 0x0346	; 0x800346 <viIndeksOdczytu>
-     964:	30 91 47 03 	lds	r19, 0x0347	; 0x800347 <viIndeksOdczytu+0x1>
-     968:	80 91 b8 02 	lds	r24, 0x02B8	; 0x8002b8 <viIndeksZapisu>
-     96c:	90 91 b9 02 	lds	r25, 0x02B9	; 0x8002b9 <viIndeksZapisu+0x1>
+     960:	20 91 4e 03 	lds	r18, 0x034E	; 0x80034e <viIndeksOdczytu>
+     964:	30 91 4f 03 	lds	r19, 0x034F	; 0x80034f <viIndeksOdczytu+0x1>
+     968:	80 91 c0 02 	lds	r24, 0x02C0	; 0x8002c0 <viIndeksZapisu>
+     96c:	90 91 c1 02 	lds	r25, 0x02C1	; 0x8002c1 <viIndeksZapisu+0x1>
      970:	28 17       	cp	r18, r24
      972:	39 07       	cpc	r19, r25
      974:	09 f4       	brne	.+2      	; 0x978 <WczytujDane+0x1c>
      976:	b8 c0       	rjmp	.+368    	; 0xae8 <WczytujDane+0x18c>
-     978:	e0 91 46 03 	lds	r30, 0x0346	; 0x800346 <viIndeksOdczytu>
-     97c:	f0 91 47 03 	lds	r31, 0x0347	; 0x800347 <viIndeksOdczytu+0x1>
-     980:	e6 54       	subi	r30, 0x46	; 70
+     978:	e0 91 4e 03 	lds	r30, 0x034E	; 0x80034e <viIndeksOdczytu>
+     97c:	f0 91 4f 03 	lds	r31, 0x034F	; 0x80034f <viIndeksOdczytu+0x1>
+     980:	ee 53       	subi	r30, 0x3E	; 62
      982:	fd 4f       	sbci	r31, 0xFD	; 253
      984:	80 81       	ld	r24, Z
      986:	8a 30       	cpi	r24, 0x0A	; 10
      988:	09 f4       	brne	.+2      	; 0x98c <WczytujDane+0x30>
      98a:	9b c0       	rjmp	.+310    	; 0xac2 <WczytujDane+0x166>
-     98c:	e0 91 46 03 	lds	r30, 0x0346	; 0x800346 <viIndeksOdczytu>
-     990:	f0 91 47 03 	lds	r31, 0x0347	; 0x800347 <viIndeksOdczytu+0x1>
-     994:	e6 54       	subi	r30, 0x46	; 70
+     98c:	e0 91 4e 03 	lds	r30, 0x034E	; 0x80034e <viIndeksOdczytu>
+     990:	f0 91 4f 03 	lds	r31, 0x034F	; 0x80034f <viIndeksOdczytu+0x1>
+     994:	ee 53       	subi	r30, 0x3E	; 62
      996:	fd 4f       	sbci	r31, 0xFD	; 253
      998:	40 81       	ld	r20, Z
-     99a:	20 91 48 03 	lds	r18, 0x0348	; 0x800348 <cDane>
-     99e:	30 91 49 03 	lds	r19, 0x0349	; 0x800349 <cDane+0x1>
-     9a2:	80 91 20 03 	lds	r24, 0x0320	; 0x800320 <iLicznikDanych>
-     9a6:	90 91 21 03 	lds	r25, 0x0321	; 0x800321 <iLicznikDanych+0x1>
+     99a:	20 91 50 03 	lds	r18, 0x0350	; 0x800350 <cDane>
+     99e:	30 91 51 03 	lds	r19, 0x0351	; 0x800351 <cDane+0x1>
+     9a2:	80 91 28 03 	lds	r24, 0x0328	; 0x800328 <iLicznikDanych>
+     9a6:	90 91 29 03 	lds	r25, 0x0329	; 0x800329 <iLicznikDanych+0x1>
      9aa:	4d 30       	cpi	r20, 0x0D	; 13
      9ac:	a9 f0       	breq	.+42     	; 0x9d8 <WczytujDane+0x7c>
-     9ae:	e0 91 46 03 	lds	r30, 0x0346	; 0x800346 <viIndeksOdczytu>
-     9b2:	f0 91 47 03 	lds	r31, 0x0347	; 0x800347 <viIndeksOdczytu+0x1>
-     9b6:	e6 54       	subi	r30, 0x46	; 70
+     9ae:	e0 91 4e 03 	lds	r30, 0x034E	; 0x80034e <viIndeksOdczytu>
+     9b2:	f0 91 4f 03 	lds	r31, 0x034F	; 0x80034f <viIndeksOdczytu+0x1>
+     9b6:	ee 53       	subi	r30, 0x3E	; 62
      9b8:	fd 4f       	sbci	r31, 0xFD	; 253
      9ba:	40 81       	ld	r20, Z
      9bc:	f9 01       	movw	r30, r18
      9be:	e8 0f       	add	r30, r24
      9c0:	f9 1f       	adc	r31, r25
      9c2:	40 83       	st	Z, r20
-     9c4:	80 91 20 03 	lds	r24, 0x0320	; 0x800320 <iLicznikDanych>
-     9c8:	90 91 21 03 	lds	r25, 0x0321	; 0x800321 <iLicznikDanych+0x1>
+     9c4:	80 91 28 03 	lds	r24, 0x0328	; 0x800328 <iLicznikDanych>
+     9c8:	90 91 29 03 	lds	r25, 0x0329	; 0x800329 <iLicznikDanych+0x1>
      9cc:	01 96       	adiw	r24, 0x01	; 1
-     9ce:	90 93 21 03 	sts	0x0321, r25	; 0x800321 <iLicznikDanych+0x1>
-     9d2:	80 93 20 03 	sts	0x0320, r24	; 0x800320 <iLicznikDanych>
+     9ce:	90 93 29 03 	sts	0x0329, r25	; 0x800329 <iLicznikDanych+0x1>
+     9d2:	80 93 28 03 	sts	0x0328, r24	; 0x800328 <iLicznikDanych>
      9d6:	75 c0       	rjmp	.+234    	; 0xac2 <WczytujDane+0x166>
      9d8:	f9 01       	movw	r30, r18
      9da:	e8 0f       	add	r30, r24
      9dc:	f9 1f       	adc	r31, r25
      9de:	10 82       	st	Z, r1
-     9e0:	10 92 21 03 	sts	0x0321, r1	; 0x800321 <iLicznikDanych+0x1>
-     9e4:	10 92 20 03 	sts	0x0320, r1	; 0x800320 <iLicznikDanych>
-     9e8:	80 91 45 03 	lds	r24, 0x0345	; 0x800345 <cStan>
+     9e0:	10 92 29 03 	sts	0x0329, r1	; 0x800329 <iLicznikDanych+0x1>
+     9e4:	10 92 28 03 	sts	0x0328, r1	; 0x800328 <iLicznikDanych>
+     9e8:	80 91 4d 03 	lds	r24, 0x034D	; 0x80034d <cStan>
      9ec:	81 30       	cpi	r24, 0x01	; 1
      9ee:	09 f4       	brne	.+2      	; 0x9f2 <WczytujDane+0x96>
      9f0:	57 c0       	rjmp	.+174    	; 0xaa0 <WczytujDane+0x144>
@@ -1079,11 +1079,11 @@ Disassembly of section .text:
      9f6:	09 f0       	breq	.+2      	; 0x9fa <WczytujDane+0x9e>
      9f8:	64 c0       	rjmp	.+200    	; 0xac2 <WczytujDane+0x166>
      9fa:	83 e0       	ldi	r24, 0x03	; 3
-     9fc:	80 93 45 03 	sts	0x0345, r24	; 0x800345 <cStan>
+     9fc:	80 93 4d 03 	sts	0x034D, r24	; 0x80034d <cStan>
      a00:	0e 94 4a 04 	call	0x894	; 0x894 <ObslugaWyswietlacza>
      a04:	5e c0       	rjmp	.+188    	; 0xac2 <WczytujDane+0x166>
-     a06:	c0 91 48 03 	lds	r28, 0x0348	; 0x800348 <cDane>
-     a0a:	d0 91 49 03 	lds	r29, 0x0349	; 0x800349 <cDane+0x1>
+     a06:	c0 91 50 03 	lds	r28, 0x0350	; 0x800350 <cDane>
+     a0a:	d0 91 51 03 	lds	r29, 0x0351	; 0x800351 <cDane+0x1>
      a0e:	63 eb       	ldi	r22, 0xB3	; 179
      a10:	71 e0       	ldi	r23, 0x01	; 1
      a12:	ce 01       	movw	r24, r28
@@ -1093,10 +1093,10 @@ Disassembly of section .text:
      a1c:	52 c0       	rjmp	.+164    	; 0xac2 <WczytujDane+0x166>
      a1e:	8c e0       	ldi	r24, 0x0C	; 12
      a20:	90 e0       	ldi	r25, 0x00	; 0
-     a22:	90 93 af 02 	sts	0x02AF, r25	; 0x8002af <n+0x1>
-     a26:	80 93 ae 02 	sts	0x02AE, r24	; 0x8002ae <n>
-     a2a:	80 91 ae 02 	lds	r24, 0x02AE	; 0x8002ae <n>
-     a2e:	90 91 af 02 	lds	r25, 0x02AF	; 0x8002af <n+0x1>
+     a22:	90 93 b7 02 	sts	0x02B7, r25	; 0x8002b7 <n+0x1>
+     a26:	80 93 b6 02 	sts	0x02B6, r24	; 0x8002b6 <n>
+     a2a:	80 91 b6 02 	lds	r24, 0x02B6	; 0x8002b6 <n>
+     a2e:	90 91 b7 02 	lds	r25, 0x02B7	; 0x8002b7 <n+0x1>
      a32:	fe 01       	movw	r30, r28
      a34:	e8 0f       	add	r30, r24
      a36:	f9 1f       	adc	r31, r25
@@ -1104,7 +1104,7 @@ Disassembly of section .text:
      a3a:	44 23       	and	r20, r20
      a3c:	51 f0       	breq	.+20     	; 0xa52 <WczytujDane+0xf6>
      a3e:	9c 01       	movw	r18, r24
-     a40:	2d 56       	subi	r18, 0x6D	; 109
+     a40:	25 56       	subi	r18, 0x65	; 101
      a42:	3d 4f       	sbci	r19, 0xFD	; 253
      a44:	f9 01       	movw	r30, r18
      a46:	3c 97       	sbiw	r30, 0x0c	; 12
@@ -1113,10 +1113,10 @@ Disassembly of section .text:
      a4c:	10 82       	st	Z, r1
      a4e:	01 96       	adiw	r24, 0x01	; 1
      a50:	e8 cf       	rjmp	.-48     	; 0xa22 <WczytujDane+0xc6>
-     a52:	83 e9       	ldi	r24, 0x93	; 147
+     a52:	8b e9       	ldi	r24, 0x9B	; 155
      a54:	92 e0       	ldi	r25, 0x02	; 2
      a56:	0e 94 e2 08 	call	0x11c4	; 0x11c4 <atoi>
-     a5a:	80 93 92 02 	sts	0x0292, r24	; 0x800292 <__data_end>
+     a5a:	80 93 9a 02 	sts	0x029A, r24	; 0x80029a <__data_end>
      a5e:	99 27       	eor	r25, r25
      a60:	9f 93       	push	r25
      a62:	8f 93       	push	r24
@@ -1133,11 +1133,11 @@ Disassembly of section .text:
      a7a:	91 e0       	ldi	r25, 0x01	; 1
      a7c:	0e 94 2c 02 	call	0x458	; 0x458 <USART_Wyslij>
      a80:	81 e0       	ldi	r24, 0x01	; 1
-     a82:	80 93 45 03 	sts	0x0345, r24	; 0x800345 <cStan>
-     a86:	8c ed       	ldi	r24, 0xDC	; 220
+     a82:	80 93 4d 03 	sts	0x034D, r24	; 0x80034d <cStan>
+     a86:	84 ee       	ldi	r24, 0xE4	; 228
      a88:	92 e0       	ldi	r25, 0x02	; 2
-     a8a:	90 93 49 03 	sts	0x0349, r25	; 0x800349 <cDane+0x1>
-     a8e:	80 93 48 03 	sts	0x0348, r24	; 0x800348 <cDane>
+     a8a:	90 93 51 03 	sts	0x0351, r25	; 0x800351 <cDane+0x1>
+     a8e:	80 93 50 03 	sts	0x0350, r24	; 0x800350 <cDane>
      a92:	0f 90       	pop	r0
      a94:	0f 90       	pop	r0
      a96:	0f 90       	pop	r0
@@ -1147,28 +1147,28 @@ Disassembly of section .text:
      a9e:	11 c0       	rjmp	.+34     	; 0xac2 <WczytujDane+0x166>
      aa0:	6d ef       	ldi	r22, 0xFD	; 253
      aa2:	71 e0       	ldi	r23, 0x01	; 1
-     aa4:	8c ed       	ldi	r24, 0xDC	; 220
+     aa4:	84 ee       	ldi	r24, 0xE4	; 228
      aa6:	92 e0       	ldi	r25, 0x02	; 2
      aa8:	0e 94 7b 02 	call	0x4f6	; 0x4f6 <Sprawdz_Tekst>
      aac:	89 2b       	or	r24, r25
      aae:	49 f0       	breq	.+18     	; 0xac2 <WczytujDane+0x166>
      ab0:	82 e0       	ldi	r24, 0x02	; 2
-     ab2:	80 93 45 03 	sts	0x0345, r24	; 0x800345 <cStan>
+     ab2:	80 93 4d 03 	sts	0x034D, r24	; 0x80034d <cStan>
      ab6:	8a ef       	ldi	r24, 0xFA	; 250
      ab8:	90 e0       	ldi	r25, 0x00	; 0
-     aba:	90 93 49 03 	sts	0x0349, r25	; 0x800349 <cDane+0x1>
-     abe:	80 93 48 03 	sts	0x0348, r24	; 0x800348 <cDane>
-     ac2:	80 91 46 03 	lds	r24, 0x0346	; 0x800346 <viIndeksOdczytu>
-     ac6:	90 91 47 03 	lds	r25, 0x0347	; 0x800347 <viIndeksOdczytu+0x1>
+     aba:	90 93 51 03 	sts	0x0351, r25	; 0x800351 <cDane+0x1>
+     abe:	80 93 50 03 	sts	0x0350, r24	; 0x800350 <cDane>
+     ac2:	80 91 4e 03 	lds	r24, 0x034E	; 0x80034e <viIndeksOdczytu>
+     ac6:	90 91 4f 03 	lds	r25, 0x034F	; 0x80034f <viIndeksOdczytu+0x1>
      aca:	01 96       	adiw	r24, 0x01	; 1
-     acc:	90 93 47 03 	sts	0x0347, r25	; 0x800347 <viIndeksOdczytu+0x1>
-     ad0:	80 93 46 03 	sts	0x0346, r24	; 0x800346 <viIndeksOdczytu>
-     ad4:	80 91 46 03 	lds	r24, 0x0346	; 0x800346 <viIndeksOdczytu>
-     ad8:	90 91 47 03 	lds	r25, 0x0347	; 0x800347 <viIndeksOdczytu+0x1>
+     acc:	90 93 4f 03 	sts	0x034F, r25	; 0x80034f <viIndeksOdczytu+0x1>
+     ad0:	80 93 4e 03 	sts	0x034E, r24	; 0x80034e <viIndeksOdczytu>
+     ad4:	80 91 4e 03 	lds	r24, 0x034E	; 0x80034e <viIndeksOdczytu>
+     ad8:	90 91 4f 03 	lds	r25, 0x034F	; 0x80034f <viIndeksOdczytu+0x1>
      adc:	80 97       	sbiw	r24, 0x20	; 32
      ade:	24 f0       	brlt	.+8      	; 0xae8 <WczytujDane+0x18c>
-     ae0:	10 92 47 03 	sts	0x0347, r1	; 0x800347 <viIndeksOdczytu+0x1>
-     ae4:	10 92 46 03 	sts	0x0346, r1	; 0x800346 <viIndeksOdczytu>
+     ae0:	10 92 4f 03 	sts	0x034F, r1	; 0x80034f <viIndeksOdczytu+0x1>
+     ae4:	10 92 4e 03 	sts	0x034E, r1	; 0x80034e <viIndeksOdczytu>
      ae8:	df 91       	pop	r29
      aea:	cf 91       	pop	r28
      aec:	08 95       	ret
@@ -1252,31 +1252,31 @@ Disassembly of section .text:
 00000b7c <TimeTWIRead>:
      b7c:	80 e0       	ldi	r24, 0x00	; 0
      b7e:	0e 94 97 05 	call	0xb2e	; 0xb2e <TWI_odczyt>
-     b82:	80 93 b0 02 	sts	0x02B0, r24	; 0x8002b0 <sekundy>
+     b82:	80 93 b8 02 	sts	0x02B8, r24	; 0x8002b8 <sekundy>
      b86:	98 2f       	mov	r25, r24
      b88:	92 95       	swap	r25
      b8a:	9f 70       	andi	r25, 0x0F	; 15
-     b8c:	90 93 33 03 	sts	0x0333, r25	; 0x800333 <sekundy_dziesiatki>
+     b8c:	90 93 3b 03 	sts	0x033B, r25	; 0x80033b <sekundy_dziesiatki>
      b90:	8f 70       	andi	r24, 0x0F	; 15
-     b92:	80 93 b1 02 	sts	0x02B1, r24	; 0x8002b1 <sekundy_jednostki>
+     b92:	80 93 b9 02 	sts	0x02B9, r24	; 0x8002b9 <sekundy_jednostki>
      b96:	81 e0       	ldi	r24, 0x01	; 1
      b98:	0e 94 97 05 	call	0xb2e	; 0xb2e <TWI_odczyt>
-     b9c:	80 93 4a 03 	sts	0x034A, r24	; 0x80034a <minuty>
+     b9c:	80 93 52 03 	sts	0x0352, r24	; 0x800352 <minuty>
      ba0:	98 2f       	mov	r25, r24
      ba2:	92 95       	swap	r25
      ba4:	9f 70       	andi	r25, 0x0F	; 15
-     ba6:	90 93 1d 03 	sts	0x031D, r25	; 0x80031d <minuty_dziesiatki>
+     ba6:	90 93 25 03 	sts	0x0325, r25	; 0x800325 <minuty_dziesiatki>
      baa:	8f 70       	andi	r24, 0x0F	; 15
-     bac:	80 93 b7 02 	sts	0x02B7, r24	; 0x8002b7 <minuty_jednostki>
+     bac:	80 93 bf 02 	sts	0x02BF, r24	; 0x8002bf <minuty_jednostki>
      bb0:	82 e0       	ldi	r24, 0x02	; 2
      bb2:	0e 94 97 05 	call	0xb2e	; 0xb2e <TWI_odczyt>
-     bb6:	80 93 ad 02 	sts	0x02AD, r24	; 0x8002ad <godziny>
+     bb6:	80 93 b5 02 	sts	0x02B5, r24	; 0x8002b5 <godziny>
      bba:	98 2f       	mov	r25, r24
      bbc:	92 95       	swap	r25
      bbe:	9f 70       	andi	r25, 0x0F	; 15
-     bc0:	90 93 1f 03 	sts	0x031F, r25	; 0x80031f <godziny_dziesiatki>
+     bc0:	90 93 27 03 	sts	0x0327, r25	; 0x800327 <godziny_dziesiatki>
      bc4:	8f 70       	andi	r24, 0x0F	; 15
-     bc6:	80 93 b2 02 	sts	0x02B2, r24	; 0x8002b2 <godziny_jednostki>
+     bc6:	80 93 ba 02 	sts	0x02BA, r24	; 0x8002ba <godziny_jednostki>
      bca:	08 95       	ret
 
 00000bcc <main>:
@@ -1284,9 +1284,9 @@ Disassembly of section .text:
      bd0:	0e 94 93 05 	call	0xb26	; 0xb26 <TWI_inicjacja>
      bd4:	0e 94 b3 02 	call	0x566	; 0x566 <PWM_inicjacja>
      bd8:	0e 94 09 03 	call	0x612	; 0x612 <Timer0_inicjacja>
-     bdc:	10 92 21 03 	sts	0x0321, r1	; 0x800321 <iLicznikDanych+0x1>
-     be0:	10 92 20 03 	sts	0x0320, r1	; 0x800320 <iLicznikDanych>
-     be4:	10 92 1e 03 	sts	0x031E, r1	; 0x80031e <cFlagaZapelnieniaPamieci>
+     bdc:	10 92 29 03 	sts	0x0329, r1	; 0x800329 <iLicznikDanych+0x1>
+     be0:	10 92 28 03 	sts	0x0328, r1	; 0x800328 <iLicznikDanych>
+     be4:	10 92 26 03 	sts	0x0326, r1	; 0x800326 <cFlagaZapelnieniaPamieci>
      be8:	0e 94 3d 04 	call	0x87a	; 0x87a <Wyjscia_Init>
      bec:	0e 94 07 01 	call	0x20e	; 0x20e <lcd_init>
      bf0:	60 e0       	ldi	r22, 0x00	; 0
@@ -1341,11 +1341,11 @@ Disassembly of section .text:
      c5e:	e1 f7       	brne	.-8      	; 0xc58 <main+0x8c>
      c60:	00 c0       	rjmp	.+0      	; 0xc62 <main+0x96>
      c62:	00 00       	nop
-     c64:	10 92 45 03 	sts	0x0345, r1	; 0x800345 <cStan>
-     c68:	8f e4       	ldi	r24, 0x4F	; 79
+     c64:	10 92 4d 03 	sts	0x034D, r1	; 0x80034d <cStan>
+     c68:	87 e5       	ldi	r24, 0x57	; 87
      c6a:	93 e0       	ldi	r25, 0x03	; 3
-     c6c:	90 93 49 03 	sts	0x0349, r25	; 0x800349 <cDane+0x1>
-     c70:	80 93 48 03 	sts	0x0348, r24	; 0x800348 <cDane>
+     c6c:	90 93 51 03 	sts	0x0351, r25	; 0x800351 <cDane+0x1>
+     c70:	80 93 50 03 	sts	0x0350, r24	; 0x800350 <cDane>
      c74:	87 e5       	ldi	r24, 0x57	; 87
      c76:	92 e0       	ldi	r25, 0x02	; 2
      c78:	0e 94 c7 01 	call	0x38e	; 0x38e <Wyswietlanie>
@@ -1353,7 +1353,7 @@ Disassembly of section .text:
      c7e:	d2 e0       	ldi	r29, 0x02	; 2
      c80:	04 e6       	ldi	r16, 0x64	; 100
      c82:	10 e0       	ldi	r17, 0x00	; 0
-     c84:	82 e8       	ldi	r24, 0x82	; 130
+     c84:	8a e8       	ldi	r24, 0x8A	; 138
      c86:	e8 2e       	mov	r14, r24
      c88:	82 e0       	ldi	r24, 0x02	; 2
      c8a:	f8 2e       	mov	r15, r24
@@ -1388,22 +1388,22 @@ Disassembly of section .text:
      cce:	1f 93       	push	r17
      cd0:	0f 93       	push	r16
      cd2:	0e 94 0f 09 	call	0x121e	; 0x121e <sprintf>
-     cd6:	80 91 b1 02 	lds	r24, 0x02B1	; 0x8002b1 <sekundy_jednostki>
+     cd6:	80 91 b9 02 	lds	r24, 0x02B9	; 0x8002b9 <sekundy_jednostki>
      cda:	1f 92       	push	r1
      cdc:	8f 93       	push	r24
-     cde:	80 91 33 03 	lds	r24, 0x0333	; 0x800333 <sekundy_dziesiatki>
+     cde:	80 91 3b 03 	lds	r24, 0x033B	; 0x80033b <sekundy_dziesiatki>
      ce2:	1f 92       	push	r1
      ce4:	8f 93       	push	r24
-     ce6:	80 91 b7 02 	lds	r24, 0x02B7	; 0x8002b7 <minuty_jednostki>
+     ce6:	80 91 bf 02 	lds	r24, 0x02BF	; 0x8002bf <minuty_jednostki>
      cea:	1f 92       	push	r1
      cec:	8f 93       	push	r24
-     cee:	80 91 1d 03 	lds	r24, 0x031D	; 0x80031d <minuty_dziesiatki>
+     cee:	80 91 25 03 	lds	r24, 0x0325	; 0x800325 <minuty_dziesiatki>
      cf2:	1f 92       	push	r1
      cf4:	8f 93       	push	r24
-     cf6:	80 91 b2 02 	lds	r24, 0x02B2	; 0x8002b2 <godziny_jednostki>
+     cf6:	80 91 ba 02 	lds	r24, 0x02BA	; 0x8002ba <godziny_jednostki>
      cfa:	1f 92       	push	r1
      cfc:	8f 93       	push	r24
-     cfe:	80 91 1f 03 	lds	r24, 0x031F	; 0x80031f <godziny_dziesiatki>
+     cfe:	80 91 27 03 	lds	r24, 0x0327	; 0x800327 <godziny_dziesiatki>
      d02:	1f 92       	push	r1
      d04:	8f 93       	push	r24
      d06:	ff 92       	push	r15
@@ -2899,8 +2899,8 @@ Disassembly of section .text:
     1890:	06 c0       	rjmp	.+12     	; 0x189e <strtod+0x27a>
     1892:	82 e2       	ldi	r24, 0x22	; 34
     1894:	90 e0       	ldi	r25, 0x00	; 0
-    1896:	90 93 71 03 	sts	0x0371, r25	; 0x800371 <errno+0x1>
-    189a:	80 93 70 03 	sts	0x0370, r24	; 0x800370 <errno>
+    1896:	90 93 79 03 	sts	0x0379, r25	; 0x800379 <errno+0x1>
+    189a:	80 93 78 03 	sts	0x0378, r24	; 0x800378 <errno>
     189e:	c5 01       	movw	r24, r10
     18a0:	b4 01       	movw	r22, r8
     18a2:	09 c0       	rjmp	.+18     	; 0x18b6 <strtod+0x292>
