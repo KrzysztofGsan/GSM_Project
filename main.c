@@ -21,15 +21,15 @@
 
 #define PIN_PRZYCISKOW PIND
 #define WEJSCIA_PRZYCISKOW (PIN_PRZYCISKOW & (PRZYCISK_ZATRZYMAJ|PRZYCISK_TRYBU))
-#define PROG_TRZYMANIA 10000
+#define PROG_TRZYMANIA 5000
 #define PROG_MRUGANIA 20
 #define ROZMIAR_BUFORA 32//32
-enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8 };
+enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13 };
 enum Tryb eAktywnyTryb = GSM;
 char cTryb[17]= "GSM CONTROL";
 unsigned char ucWejsciaPrzyciskowNowe=0;
 unsigned char ucWejsciaPrzyciskowStare=0;
-unsigned int uiLicznikTrzymania=0;
+unsigned int uiLicznikPozNeutralnej=0;
 unsigned char sekundy;
 unsigned char minuty;
 unsigned char godziny;
@@ -124,25 +124,23 @@ int main(void){
    sei();
 
   ADC_Init(); //odkomentowac
-  USART_Init();
- _delay_ms(3000);
-  USART_Wyslij("ATE0");
-  _delay_ms(500);
-  USART_Wyslij("AT+CMGF=1");
-  _delay_ms(500);
-  USART_Wyslij("AT+CPMS=\"ME_P\",\"ME_P\",\"ME_P\""); //USART_Wyslij("AT+CPMS=\"SM\""); /
-  _delay_ms(500);
-
-  cStan=OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI;
-  cDane=cOdebranaKomenda; //domyslny bufor (dla stanu = 0)
-  Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
-
+//  USART_Init();
+// _delay_ms(3000);
+//  USART_Wyslij("ATE0");
+//  _delay_ms(500);
+//  USART_Wyslij("AT+CMGF=1");
+//  _delay_ms(500);
+//  USART_Wyslij("AT+CPMS=\"ME_P\",\"ME_P\",\"ME_P\""); //USART_Wyslij("AT+CPMS=\"SM\""); /
+//  _delay_ms(500);
+//
+//  cStan=OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI;
+//  cDane=cOdebranaKomenda; //domyslny bufor (dla stanu = 0)
+//  Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
+  eAktywnyTryb = TIME_CONTROL; //poczatkowy tryb
   while(1){
-	  _delay_ms(100);
+	  //_delay_ms(100);
 	  TimeTWIRead();
-	  sprintf(cTrescWiadomosci1,"ON%02d:%02d OFF%02d:%02d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
-	  sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
-	  ObslugaWyswietlacza();
+
 	  if ( TimeMatchCheck(ON_godzina,ON_minuta) == TRUE){
 		  PORTC |= (1<<PRZEKAZNIK);
 		  PORTA |=  (1<<LED);
@@ -260,58 +258,41 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 	ucWejsciaPrzyciskowNowe = WEJSCIA_PRZYCISKOW;
 
 	if( (ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) != (ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ){ //jesli sie zmienił stan
-	//if((ucWejsciaPrzyciskowNowe & PRZYCISK_ZATRZYMAJ) ==0){
-		//eAktywnyTryb = PRE_STOP;
-		//sprintf(cTryb,"STOP");
 
-		ON_minuta=ON_minuta+1;
-		if(ON_minuta>=59){
-			ON_minuta = 0;
+		if(eAktywnyTryb== ON_MIN_SET){
+			ON_minuta=ON_minuta+1;
+				if(ON_minuta>59){
+					ON_minuta = 0;
+				}
+		}
+		if(eAktywnyTryb== ON_HOUR_SET){
+			ON_godzina=ON_godzina+1;
+			if(ON_godzina>23){
+				ON_godzina = 0;
+			}
+		}
+		uiLicznikPozNeutralnej=0;
+	}
+	else{ //jesli nie nacisnieto
+		uiLicznikPozNeutralnej++;
+		if(uiLicznikPozNeutralnej>=PROG_TRZYMANIA){
+			uiLicznikPozNeutralnej=0;
+			uiLicznikMrugania=0;
+			switch(eAktywnyTryb){
+				case TIME_CONTROL:
+					eAktywnyTryb = ON_MIN_SET;
+					break;
+				case ON_MIN_SET:
+					eAktywnyTryb=ON_HOUR_SET;
+					break;
+				case ON_HOUR_SET:
+					eAktywnyTryb=TIME_CONTROL;
+					break;
+			}
 		}
 	}
 
-//	if( ((ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) ==0) && (ucWejsciaPrzyciskowNowe==ucWejsciaPrzyciskowStare) ){ //przytrzymano
-//		uiLicznikTrzymania++;
-//		if(uiLicznikTrzymania>=PROG_TRZYMANIA){
-//			uiLicznikTrzymania=0;
-//			uiLicznikMrugania=0;
-//			switch(eAktywnyTryb){
-//				case PRE_GSM:
-//					eAktywnyTryb=GSM;
-//					break;
-//				case PRE_BT:
-//					eAktywnyTryb=BT;
-//					break;
-//				case PRE_POT:
-//					eAktywnyTryb=POT;
-//					break;
-//				case PRE_STOP:
-//					eAktywnyTryb=STOP;
-//					break;
-//			}
-//		}
-//		//Wystartowanie_Trybu(eAktywnyTryb);
-//	}
-//	else if(( ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ==0){ //puszczono przycisk (krotkie nacisniecie)
-//		switch(eAktywnyTryb){
-//			case PRE_STOP:
-//				eAktywnyTryb=PRE_GSM;
-//				sprintf(cTryb,"GSM CONTROL");
-//				break;
-//			case PRE_GSM:
-//				eAktywnyTryb=PRE_BT;
-//				sprintf(cTryb,"BT CONTROL");
-//				break;
-//			case PRE_BT:
-//				eAktywnyTryb=PRE_POT;
-//				sprintf(cTryb,"POT CONTROL");
-//				break;
-//			case PRE_POT:
-//				eAktywnyTryb=PRE_STOP;
-//				sprintf(cTryb,"STOP");
-//				break;
-//		}
-//		uiLicznikTrzymania=0;
+
 //	}
 //	else{ //nie nacisnieto PRZYCISK_TRYBU
 //		uiLicznikTrzymania=0;
@@ -538,26 +519,32 @@ void Wyjscia_Init(void){
 }
 
 void ObslugaWyswietlacza(void){
+	sprintf(cTrescWiadomosci1,"ON%02d:%02d OFF%02d:%02d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
+	//sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
+	sprintf(cTrescWiadomosci2,"%d",uiLicznikPozNeutralnej);
 
 	LCD_CLEAR;
 
-	if( (eAktywnyTryb==PRE_BT) ||  (eAktywnyTryb==PRE_GSM) || (eAktywnyTryb==PRE_POT) || (eAktywnyTryb==PRE_STOP) ){
-		if(uiLicznikMrugania<=PROG_MRUGANIA){
-			LCD_LOCATE(0,0);
-			lcd_puts(cTryb);
+	if(uiLicznikMrugania<=PROG_MRUGANIA){
+		if(eAktywnyTryb==ON_HOUR_SET){
+			cTrescWiadomosci1[2] = ' ';
+			cTrescWiadomosci1[3] = ' ';
 		}
-		if(uiLicznikMrugania>=2*PROG_MRUGANIA){
-			uiLicznikMrugania=0;
+		else if(eAktywnyTryb==ON_MIN_SET){
+			cTrescWiadomosci1[5] = ' ';
+			cTrescWiadomosci1[6] = ' ';
 		}
-		uiLicznikMrugania++;
 	}
-	else{
-		LCD_LOCATE(0,0);
-		lcd_puts(cTrescWiadomosci1); //lcd_puts(cTryb);
+	if(uiLicznikMrugania>=2*PROG_MRUGANIA){
+		uiLicznikMrugania=0;
 	}
+	uiLicznikMrugania++;
+
+	LCD_LOCATE(0,0);
+	lcd_puts(cTrescWiadomosci1);
+
 	LCD_LOCATE(0,1);
 	lcd_puts(cTrescWiadomosci2);
-
 }
 
 void Wystartowanie_Trybu(int eAktywnyTryb){
