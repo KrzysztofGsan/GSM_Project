@@ -21,7 +21,7 @@
 
 #define PIN_PRZYCISKOW PIND
 #define WEJSCIA_PRZYCISKOW (PIN_PRZYCISKOW & (PRZYCISK_ZATRZYMAJ|PRZYCISK_TRYBU))
-#define PROG_TRZYMANIA 5000
+#define PROG_TRZYMANIA 2500
 #define PROG_MRUGANIA 20
 #define ROZMIAR_BUFORA 32//32
 enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13 };
@@ -259,17 +259,22 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 
 	if( (ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) != (ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ){ //jesli sie zmienił stan
 
-		if(eAktywnyTryb== ON_MIN_SET){
-			ON_minuta=ON_minuta+1;
-				if(ON_minuta>59){
-					ON_minuta = 0;
+		switch(eAktywnyTryb){
+			case TIME_CONTROL:
+				eAktywnyTryb = ON_HOUR_SET;
+				break;
+			case ON_HOUR_SET:
+				ON_godzina=ON_godzina+1;
+				if(ON_godzina>23){
+					ON_godzina = 0;
 				}
-		}
-		if(eAktywnyTryb== ON_HOUR_SET){
-			ON_godzina=ON_godzina+1;
-			if(ON_godzina>23){
-				ON_godzina = 0;
-			}
+				break;
+			case ON_MIN_SET:
+				ON_minuta=ON_minuta+1;
+					if(ON_minuta>59){
+						ON_minuta = 0;
+					}
+				break;
 		}
 		uiLicznikPozNeutralnej=0;
 	}
@@ -279,13 +284,10 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 			uiLicznikPozNeutralnej=0;
 			uiLicznikMrugania=0;
 			switch(eAktywnyTryb){
-				case TIME_CONTROL:
-					eAktywnyTryb = ON_MIN_SET;
-					break;
-				case ON_MIN_SET:
-					eAktywnyTryb=ON_HOUR_SET;
-					break;
 				case ON_HOUR_SET:
+					eAktywnyTryb=ON_MIN_SET;
+					break;
+				default:
 					eAktywnyTryb=TIME_CONTROL;
 					break;
 			}
