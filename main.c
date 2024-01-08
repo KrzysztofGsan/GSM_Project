@@ -261,7 +261,7 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 
 		switch(eAktywnyTryb){
 			case TIME_CONTROL:
-				eAktywnyTryb = ON_HOUR_SET;
+				eAktywnyTryb = ON_HOUR_SET;  //po pierwszym nacisnieciu przycisku bedziemy ustawiac godziny zal/wyl poczynajac od godziny zalaczenia.
 				break;
 			case ON_HOUR_SET:
 				ON_godzina=ON_godzina+1;
@@ -275,6 +275,18 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 						ON_minuta = 0;
 					}
 				break;
+			case OFF_HOUR_SET:
+				OFF_godzina=OFF_godzina+1;
+				if(OFF_godzina>23){
+					OFF_godzina = 0;
+				}
+				break;
+			case OFF_MIN_SET:
+				OFF_minuta=OFF_minuta+1;
+				if(OFF_minuta>59){
+					OFF_minuta = 0;
+				}
+				break;
 		}
 		uiLicznikPozNeutralnej=0;
 	}
@@ -286,6 +298,12 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 			switch(eAktywnyTryb){
 				case ON_HOUR_SET:
 					eAktywnyTryb=ON_MIN_SET;
+					break;
+				case ON_MIN_SET:
+					eAktywnyTryb=OFF_HOUR_SET;
+					break;
+				case OFF_HOUR_SET:
+					eAktywnyTryb=OFF_MIN_SET;
 					break;
 				default:
 					eAktywnyTryb=TIME_CONTROL;
@@ -535,6 +553,14 @@ void ObslugaWyswietlacza(void){
 		else if(eAktywnyTryb==ON_MIN_SET){
 			cTrescWiadomosci1[5] = ' ';
 			cTrescWiadomosci1[6] = ' ';
+		}
+		else if(eAktywnyTryb==OFF_HOUR_SET){
+			cTrescWiadomosci1[11] = ' ';
+			cTrescWiadomosci1[12] = ' ';
+		}
+		else if(eAktywnyTryb==OFF_MIN_SET){
+			cTrescWiadomosci1[14] = ' ';
+			cTrescWiadomosci1[15] = ' ';
 		}
 	}
 	if(uiLicznikMrugania>=2*PROG_MRUGANIA){
