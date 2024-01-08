@@ -21,7 +21,7 @@
 
 #define PIN_PRZYCISKOW PIND
 #define WEJSCIA_PRZYCISKOW (PIN_PRZYCISKOW & (PRZYCISK_ZATRZYMAJ|PRZYCISK_TRYBU))
-#define PROG_TRZYMANIA 2500
+#define PROG_TRZYMANIA 2000
 #define PROG_MRUGANIA 20
 #define ROZMIAR_BUFORA 32//32
 enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13 };
@@ -40,10 +40,10 @@ unsigned char minuty_jednostki;
 unsigned char godziny_dziesiatki;
 unsigned char godziny_jednostki;
 
-unsigned char ON_godzina=21;
-unsigned char ON_minuta=18;
-unsigned char OFF_godzina=21;
-unsigned char OFF_minuta=20;
+unsigned char ON_godzina=20;
+unsigned char ON_minuta=45;
+unsigned char OFF_godzina=20;
+unsigned char OFF_minuta=47;
 
 void ADC_Init(void);
 void ADC_Pomiar(int Pin);
@@ -107,8 +107,8 @@ int main(void){
    Przyciski_Init();
    TWI_inicjacja();
 //   TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
-//   TWI_zapis(0x01,0x55);//minut
-//   TWI_zapis(0x02,0x20);//godzina
+//   TWI_zapis(0x01,0x42);//minut
+//  TWI_zapis(0x02,0x20);//godzina
    PWM_inicjacja();
    Timer0_inicjacja();
    iLicznikDanych=0;
@@ -540,8 +540,8 @@ void Wyjscia_Init(void){
 
 void ObslugaWyswietlacza(void){
 	sprintf(cTrescWiadomosci1,"ON%02d:%02d OFF%02d:%02d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
-	//sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
-	sprintf(cTrescWiadomosci2,"%d",uiLicznikPozNeutralnej);
+	sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
+	//sprintf(cTrescWiadomosci2,"%d",uiLicznikPozNeutralnej); //debug only
 
 	LCD_CLEAR;
 
