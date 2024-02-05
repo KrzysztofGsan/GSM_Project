@@ -30,7 +30,7 @@ enum Tryb eAktywnyTryb = TIME_CONTROL;
 unsigned char ucWejsciaPrzyciskowNowe=0;
 unsigned char ucWejsciaPrzyciskowStare=0;
 unsigned char ucWejsciaPrzyciskowXOR;
-unsigned int uiLicznikPozNeutralnej=0;
+volatile unsigned int uiLicznikPozNeutralnej=0;
 unsigned char sekundy;
 unsigned char minuty;
 unsigned char godziny;
@@ -266,9 +266,8 @@ void Wyswietlanie(char cDane[]){
 
 void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy są wciśniete czy nie wiec de facto mozemy reagować tylko na zbocze.
 	ucWejsciaPrzyciskowNowe = WEJSCIA_PRZYCISKOW;
-
-
-	if( (ucWejsciaPrzyciskowNowe & PRZYCISK_ZATRZYMAJ) != (ucWejsciaPrzyciskowStare & PRZYCISK_ZATRZYMAJ) ){ //PRZYCISK_ZATRZYMAJ ma priorytet! func
+    ucWejsciaPrzyciskowXOR = (ucWejsciaPrzyciskowNowe^ucWejsciaPrzyciskowStare);
+	if( ucWejsciaPrzyciskowXOR & PRZYCISK_ZATRZYMAJ){ //PRZYCISK_ZATRZYMAJ ma priorytet! func
 
 		switch(eAktywnyTryb){
 			default:
@@ -277,7 +276,7 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 		}
 		uiLicznikPozNeutralnej=0;
 	}
-	else if( (ucWejsciaPrzyciskowNowe & PRZYCISK_TRYBU) != (ucWejsciaPrzyciskowStare & PRZYCISK_TRYBU) ){ //jesli sie zmienił stan
+	else if( ucWejsciaPrzyciskowXOR & PRZYCISK_TRYBU ){ //jesli sie zmienił stan
 
 		switch(eAktywnyTryb){
 			case TIME_CONTROL:
@@ -310,11 +309,12 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 		}
 		uiLicznikPozNeutralnej=0;
 	}
-	else{ //jesli nie nacisnieto
-		uiLicznikPozNeutralnej++;
+	else if(ucWejsciaPrzyciskowXOR==0){ //jesli nie nacisnieto
 		if(uiLicznikPozNeutralnej>=PROG_TRZYMANIA){
-			uiLicznikPozNeutralnej=0;
-			uiLicznikMrugania=0;
+			PORTA |=  (1<<LED); //usun
+			_delay_ms(1000); //usun
+			PORTA &=  ~(1<<LED); //usun
+
 			switch(eAktywnyTryb){
 				case ON_HOUR_SET:
 					eAktywnyTryb=ON_MIN_SET;
@@ -329,7 +329,11 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 					eAktywnyTryb=TIME_CONTROL;
 					break;
 			}
+			uiLicznikPozNeutralnej=0;
+			uiLicznikMrugania=0;
 		}
+		uiLicznikPozNeutralnej=uiLicznikPozNeutralnej+1;
+		PORTA ^=  (1<<LED); //usun
 	}
 
 
@@ -592,7 +596,7 @@ void ObslugaWyswietlacza(void){
 			}
 			break;
 	}
-
+	sprintf(cTrescWiadomosci2,"Neutr: %d",uiLicznikPozNeutralnej); //usun! debug only
 	LCD_LOCATE(0,0);
 	lcd_puts(cTrescWiadomosci1);
 
