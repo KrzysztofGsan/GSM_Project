@@ -29,6 +29,7 @@ enum Tryb eAktywnyTryb = TIME_CONTROL;
 
 unsigned char ucWejsciaPrzyciskowNowe=0;
 unsigned char ucWejsciaPrzyciskowStare=0;
+unsigned char ucWejsciaPrzyciskowXOR;
 unsigned int uiLicznikPozNeutralnej=0;
 unsigned char sekundy;
 unsigned char minuty;
@@ -342,6 +343,8 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 void Przyciski_Init(void){
 	DDRD &= ~((PRZYCISK_ZATRZYMAJ)|(PRZYCISK_TRYBU));
 	PORTD |= (PRZYCISK_ZATRZYMAJ |PRZYCISK_TRYBU); //podiciagniecie do +
+
+	ucWejsciaPrzyciskowStare = WEJSCIA_PRZYCISKOW;
 }
 
 void USART_Init(void){
