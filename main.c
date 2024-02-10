@@ -24,13 +24,13 @@
 #define PROG_TRZYMANIA 2000
 #define PROG_MRUGANIA 20
 #define ROZMIAR_BUFORA 32//32
-enum Tryb {STOP = 0,  PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13 }; //PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7,
-enum Tryb eAktywnyTryb = TIME_CONTROL;
-
+enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13 };
+enum Tryb eAktywnyTryb = GSM;
+char cTryb[17]= "GSM CONTROL";
 unsigned char ucWejsciaPrzyciskowNowe=0;
 unsigned char ucWejsciaPrzyciskowStare=0;
-unsigned char ucWejsciaPrzyciskowXOR;
-volatile unsigned int uiLicznikPozNeutralnej=0;
+unsigned char ucWejsciaPrzyciskowXOR=0;
+unsigned int uiLicznikPozNeutralnej=0;
 unsigned char sekundy;
 unsigned char minuty;
 unsigned char godziny;
@@ -62,7 +62,7 @@ void Wyjscia_Init(void);
 void ZmianaWypelnienia(void);
 void ObslugaWyswietlacza(void);
 void Timer0_inicjacja(void); //to jest potrzebne do mrugania wyswietlacza
-//void Wystartowanie_Trybu(int eAktywnyTryb);
+void Wystartowanie_Trybu(int eAktywnyTryb);
 void TWI_inicjacja(void);
 unsigned char TWI_odczyt(unsigned char adres_rejestru);
 void TWI_zapis(unsigned char adres_rejestru, unsigned char liczba);
@@ -138,9 +138,9 @@ int main(void){
 //  cDane=cOdebranaKomenda; //domyslny bufor (dla stanu = 0)
 //  Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
   eAktywnyTryb = TIME_CONTROL; //poczatkowy tryb
-  //char cTryb[17]= "GSM CONTROL";
   while(1){
 	  //_delay_ms(100);
+	  TimeTWIRead();
 
 	  switch(eAktywnyTryb){
 	  	  case TIME_CONTROL:
@@ -311,10 +311,8 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 	}
 	else if(ucWejsciaPrzyciskowXOR==0){ //jesli nie nacisnieto
 		if(uiLicznikPozNeutralnej>=PROG_TRZYMANIA){
-			PORTA |=  (1<<LED); //usun
-			_delay_ms(1000); //usun
-			PORTA &=  ~(1<<LED); //usun
-
+			uiLicznikPozNeutralnej=0;
+			uiLicznikMrugania=0;
 			switch(eAktywnyTryb){
 				case ON_HOUR_SET:
 					eAktywnyTryb=ON_MIN_SET;
@@ -325,15 +323,12 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 				case OFF_HOUR_SET:
 					eAktywnyTryb=OFF_MIN_SET;
 					break;
-				case OFF_MIN_SET:
+				default:
 					eAktywnyTryb=TIME_CONTROL;
 					break;
 			}
-			uiLicznikPozNeutralnej=0;
-			uiLicznikMrugania=0;
 		}
 		uiLicznikPozNeutralnej=uiLicznikPozNeutralnej+1;
-		PORTA ^=  (1<<LED); //usun
 	}
 
 
@@ -596,7 +591,7 @@ void ObslugaWyswietlacza(void){
 			}
 			break;
 	}
-	sprintf(cTrescWiadomosci2,"Neutr: %d",uiLicznikPozNeutralnej); //usun! debug only
+
 	LCD_LOCATE(0,0);
 	lcd_puts(cTrescWiadomosci1);
 
@@ -608,24 +603,24 @@ void ObslugaWyswietlacza(void){
 	}
 	uiLicznikMrugania++;
 }
-
-//void Wystartowanie_Trybu(int eAktywnyTryb){
-//	switch(eAktywnyTryb){
-//		case GSM:
-//			sprintf(cTryb,"GSM CONTROL");
-//			break;
-//		case BT:
-//			sprintf(cTryb,"BT CONTROL");
-//			break;
-//		case POT:
-//			sprintf(cTryb,"POT CONTROL");
-//			break;
-//		case STOP:
-//			sprintf(cTryb,"STOP");
-//			break;
-//	}
-//}
-
+/*
+void Wystartowanie_Trybu(int eAktywnyTryb){
+	switch(eAktywnyTryb){
+		case GSM:
+			sprintf(cTryb,"GSM CONTROL");
+			break;
+		case BT:
+			sprintf(cTryb,"BT CONTROL");
+			break;
+		case POT:
+			sprintf(cTryb,"POT CONTROL");
+			break;
+		case STOP:
+			sprintf(cTryb,"STOP");
+			break;
+	}
+}
+*/
 //TWI //I2C
 void TWI_inicjacja(void)
 {
