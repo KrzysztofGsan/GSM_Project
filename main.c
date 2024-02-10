@@ -24,7 +24,7 @@
 #define PROG_TRZYMANIA 2000
 #define PROG_MRUGANIA 20
 #define ROZMIAR_BUFORA 32//32
-enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13 };
+enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13, FORCE_ON=14 };
 enum Tryb eAktywnyTryb = GSM;
 char cTryb[17]= "GSM CONTROL";
 unsigned char ucWejsciaPrzyciskowNowe=0;
@@ -62,7 +62,7 @@ void Wyjscia_Init(void);
 void ZmianaWypelnienia(void);
 void ObslugaWyswietlacza(void);
 void Timer0_inicjacja(void); //to jest potrzebne do mrugania wyswietlacza
-void Wystartowanie_Trybu(int eAktywnyTryb);
+//void Wystartowanie_Trybu(int eAktywnyTryb);
 void TWI_inicjacja(void);
 unsigned char TWI_odczyt(unsigned char adres_rejestru);
 void TWI_zapis(unsigned char adres_rejestru, unsigned char liczba);
@@ -157,6 +157,10 @@ int main(void){
 	  	  case STOP:
 	  		  PORTC &= ~(1<<PRZEKAZNIK);
 	  		  PORTA &=  ~(1<<LED);
+	  		  break;
+	  	  case FORCE_ON:
+			  PORTC |= (1<<PRZEKAZNIK);
+			  PORTA |=  (1<<LED);
 	  		  break;
 	  }
 
@@ -270,6 +274,12 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 	if( ucWejsciaPrzyciskowXOR & PRZYCISK_ZATRZYMAJ){ //PRZYCISK_ZATRZYMAJ ma priorytet! func
 
 		switch(eAktywnyTryb){
+			case STOP:
+				eAktywnyTryb = FORCE_ON;
+				break;
+			case FORCE_ON:
+				eAktywnyTryb = TIME_CONTROL;
+				break;
 			default:
 				eAktywnyTryb = STOP;
 				break;
@@ -325,6 +335,9 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 					break;
 				case STOP: //podtrzymanie stopa gdy nic nie jest nacisniete
 					eAktywnyTryb=STOP;
+					break;
+				case FORCE_ON:
+					eAktywnyTryb = FORCE_ON; // podtrzymanie force on gdy nic nie jest nacisniete
 					break;
 				default:
 					eAktywnyTryb=TIME_CONTROL;
@@ -569,6 +582,10 @@ void ObslugaWyswietlacza(void){
 		case STOP:
 			sprintf(cTrescWiadomosci1,"STOP");
 			sprintf(cTrescWiadomosci2,"Stop Awaryjny!");
+			break;
+		case FORCE_ON:
+			sprintf(cTrescWiadomosci1,"ON");
+			sprintf(cTrescWiadomosci2,"FORCE_ON:!");
 			break;
 		default:
 			sprintf(cTrescWiadomosci1,"ON%02d:%02d OFF%02d:%02d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
