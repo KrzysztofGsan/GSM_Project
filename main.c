@@ -323,6 +323,9 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 				case OFF_HOUR_SET:
 					eAktywnyTryb=OFF_MIN_SET;
 					break;
+				case STOP: //podtrzymanie stopa gdy nic nie jest nacisniete
+					eAktywnyTryb=STOP;
+					break;
 				default:
 					eAktywnyTryb=TIME_CONTROL;
 					break;
