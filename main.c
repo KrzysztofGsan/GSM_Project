@@ -42,9 +42,9 @@ unsigned char godziny_dziesiatki;
 unsigned char godziny_jednostki;
 
 unsigned char ON_godzina=20;
-unsigned char ON_minuta=45;
+unsigned char ON_minuta=00;
 unsigned char OFF_godzina=20;
-unsigned char OFF_minuta=47;
+unsigned char OFF_minuta=30;
 
 void ADC_Init(void);
 void ADC_Pomiar(int Pin);
@@ -154,13 +154,13 @@ int main(void){
 				  PORTA &=  ~(1<<LED);
 			  }
 			  break;
-	  	  case STOP:
-	  		  PORTC &= ~(1<<PRZEKAZNIK);
-	  		  PORTA &=  ~(1<<LED);
-	  		  break;
 	  	  case FORCE_ON:
 			  PORTC |= (1<<PRZEKAZNIK);
 			  PORTA |=  (1<<LED);
+	  		  break;
+	  	  default: //dla STOP i oraz podczas ustawiania godzin ON OFF wyłączymy wyjscie
+	  		  PORTC &= ~(1<<PRZEKAZNIK);
+	  		  PORTA &=  ~(1<<LED);
 	  		  break;
 	  }
 
@@ -278,7 +278,7 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 				eAktywnyTryb = FORCE_ON;
 				break;
 			case FORCE_ON:
-				eAktywnyTryb = TIME_CONTROL;
+				eAktywnyTryb = STOP;
 				break;
 			default:
 				eAktywnyTryb = STOP;
@@ -290,6 +290,7 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 
 		switch(eAktywnyTryb){
 			case TIME_CONTROL:
+			case STOP:
 				eAktywnyTryb = ON_HOUR_SET;  //po pierwszym nacisnieciu przycisku bedziemy ustawiac godziny zal/wyl poczynajac od godziny zalaczenia.
 				break;
 			case ON_HOUR_SET:
@@ -580,16 +581,13 @@ void ObslugaWyswietlacza(void){
 
 	switch(eAktywnyTryb){
 		case STOP:
-			sprintf(cTrescWiadomosci1,"STOP");
-			sprintf(cTrescWiadomosci2,"Stop Awaryjny!");
+			sprintf(cTrescWiadomosci1,"Stop Awaryjny!");
 			break;
 		case FORCE_ON:
-			sprintf(cTrescWiadomosci1,"ON");
-			sprintf(cTrescWiadomosci2,"FORCE_ON:!");
+			sprintf(cTrescWiadomosci1,"FORCE_ON");
 			break;
 		default:
 			sprintf(cTrescWiadomosci1,"ON%02d:%02d OFF%02d:%02d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
-			sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
 
 			if(uiLicznikMrugania<=PROG_MRUGANIA){
 				if(eAktywnyTryb==ON_HOUR_SET){
@@ -616,6 +614,7 @@ void ObslugaWyswietlacza(void){
 	lcd_puts(cTrescWiadomosci1);
 
 	LCD_LOCATE(0,1);
+	sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
 	lcd_puts(cTrescWiadomosci2);
 
 	if(uiLicznikMrugania>=2*PROG_MRUGANIA){
