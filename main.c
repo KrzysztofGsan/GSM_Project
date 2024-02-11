@@ -108,9 +108,9 @@ int main(void){
    Przyciski_Init();
    TWI_inicjacja();
 //   TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
-   TWI_zapis(0x00,0x00);//sekund
-   TWI_zapis(0x01,0x47);//minut
-   TWI_zapis(0x02,0x19);//godzina
+//   TWI_zapis(0x00,0x00);//sekund
+//   TWI_zapis(0x01,0x19);//minut
+//   TWI_zapis(0x02,0x20);//godzina
    PWM_inicjacja();
    Timer0_inicjacja();
    iLicznikDanych=0;
@@ -138,7 +138,7 @@ int main(void){
 //  cStan=OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI;
 //  cDane=cOdebranaKomenda; //domyslny bufor (dla stanu = 0)
 //  Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
-  eAktywnyTryb = TIME_CONTROL; //poczatkowy tryb
+  eAktywnyTryb = FORCE_ON; //poczatkowy tryb
   while(1){
 	  //_delay_ms(100);
 	  TimeTWIRead();
