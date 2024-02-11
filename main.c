@@ -108,8 +108,9 @@ int main(void){
    Przyciski_Init();
    TWI_inicjacja();
 //   TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
-//   TWI_zapis(0x01,0x42);//minut
-//  TWI_zapis(0x02,0x20);//godzina
+   TWI_zapis(0x00,0x00);//sekund
+   TWI_zapis(0x01,0x47);//minut
+   TWI_zapis(0x02,0x19);//godzina
    PWM_inicjacja();
    Timer0_inicjacja();
    iLicznikDanych=0;
