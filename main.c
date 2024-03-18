@@ -14,6 +14,7 @@
 #define LED PA6
 #define ADC_POT PC3//PC5
 #define ADC_LM35 PC0//PC4
+#define KLASKACZ PA2
 #define PRZYCISK_ZATRZYMAJ (1<<PD2)
 #define PRZYCISK_TRYBU (1<<PD3)
 #define TRUE 1
@@ -42,9 +43,9 @@ unsigned char godziny_dziesiatki;
 unsigned char godziny_jednostki;
 
 unsigned char ON_godzina=20;
-unsigned char ON_minuta=00;
-unsigned char OFF_godzina=20;
-unsigned char OFF_minuta=30;
+unsigned char ON_minuta=30;
+unsigned char OFF_godzina=21;
+unsigned char OFF_minuta=00;
 
 void ADC_Init(void);
 void ADC_Pomiar(int Pin);
@@ -68,8 +69,11 @@ unsigned char TWI_odczyt(unsigned char adres_rejestru);
 void TWI_zapis(unsigned char adres_rejestru, unsigned char liczba);
 void TimeTWIRead(void);
 char TimeMatchCheck(int godzina_zal, int minuta_zal);
+void ADC_init(void);
+uint16_t ADC_read(uint8_t channel);
 //void WYSWIETLACZ_LCD_Off(void);
 
+uint16_t ADC_val;
 volatile int iFlagaDoWyslania;
 char WzorWiadOdebr[] = "+CMTI: "; //char WzorWiadOdebr[] = "+CMTI: \"SM\",";
 char WzorMetadanych[] = "+CMGR:";
@@ -111,6 +115,7 @@ int main(void){
 //   TWI_zapis(0x00,0x00);//sekund
 //   TWI_zapis(0x01,0x19);//minut
 //   TWI_zapis(0x02,0x20);//godzina
+   ADC_init();
    PWM_inicjacja();
    Timer0_inicjacja();
    iLicznikDanych=0;
@@ -126,11 +131,11 @@ int main(void){
    sei();
 
   ADC_Init(); //odkomentowac
-//  USART_Init();
-// _delay_ms(3000);
-//  USART_Wyslij("ATE0");
-//  _delay_ms(500);
-//  USART_Wyslij("AT+CMGF=1");
+  USART_Init();
+ _delay_ms(3000);
+  USART_Wyslij("ATE0");
+  _delay_ms(500);
+  USART_Wyslij("AT+CMGF=1");
 //  _delay_ms(500);
 //  USART_Wyslij("AT+CPMS=\"ME_P\",\"ME_P\",\"ME_P\""); //USART_Wyslij("AT+CPMS=\"SM\""); /
 //  _delay_ms(500);
@@ -141,6 +146,8 @@ int main(void){
   eAktywnyTryb = FORCE_ON; //poczatkowy tryb
   while(1){
 	  //_delay_ms(100);
+	  ADC_val = ADC_read(2);
+
 	  TimeTWIRead();
 
 	  switch(eAktywnyTryb){
@@ -615,7 +622,8 @@ void ObslugaWyswietlacza(void){
 	lcd_puts(cTrescWiadomosci1);
 
 	LCD_LOCATE(0,1);
-	sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
+	//sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
+	sprintf(cTrescWiadomosci2,"ADC: %d",ADC_val);
 	lcd_puts(cTrescWiadomosci2);
 
 	if(uiLicznikMrugania>=2*PROG_MRUGANIA){
@@ -696,6 +704,36 @@ void TWI_zapis(unsigned char adres_rejestru, unsigned char liczba)
   TWCR =(1 << TWINT) | (1 << TWEN);
   while(!(TWCR & (1 << TWINT)));
   TWCR =(1 << TWINT) | (1<<TWEN) | (1<<TWSTO);
+}
+
+void ADC_init() {
+    // Ustawienia ADC: ustawienia napięcia referencyjnego, preskalera i inicjalizacja ADC
+    ADMUX = (1 << REFS0);  // Ustawienie napięcia referencyjnego na AVcc
+    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);  // Włączenie ADC i ustawienie preskalera na 128
+}
+
+uint16_t ADC_read(uint8_t channel) {
+    // Wybór kanału ADC
+    ADMUX &= 0xF0;          // Wyczyszczenie starszych bitów
+    ADMUX |= channel & 0x0F; // Ustawienie kanału ADC
+
+    // Rozpoczęcie konwersji
+    ADCSRA |= (1 << ADSC);
+
+    // Oczekiwanie na zakończenie konwersji
+    while (ADCSRA & (1 << ADSC));
+
+    while ( !( UCSRA & (1<<UDRE)) );
+    UDR = ADCH;
+    while ( !( UCSRA & (1<<UDRE)) );
+    UDR = ADCL;
+    while ( !( UCSRA & (1<<UDRE)) );
+    UDR = 13;
+
+
+
+    // Zwrócenie wyniku konwersji
+    return ADC;
 }
 
 /*
