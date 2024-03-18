@@ -761,10 +761,10 @@ void WYSWIETLACZ_LCD_Off(void){
 void ObslugaKlaskacza(void){
 #define MEASUREMENT_RANGE 300
 #define SOUND_THRESHOLD	350
-unsigned int uiMeasurementIndex=0;
+static unsigned int uiMeasurementIndex=0;
 uint16_t ADC_val;
 
-	 if(uiMeasurementIndex<MEASUREMENT_RANGE){
+	 	 if(uiMeasurementIndex<MEASUREMENT_RANGE){
 		 ADC_val = ADC_read(2);
 			  uiMeasurementIndex++;
 			  if(ADC_val<SOUND_THRESHOLD){
@@ -773,14 +773,23 @@ uint16_t ADC_val;
 		  }
 		  else{
 			  if (ucKlaskFlag==1){
-				  PORTC ^=  (1<<PRZEKAZNIK);
-				  PORTA ^=  (1<<LED);
-				  _delay_ms(500);
+					switch(eAktywnyTryb){
+						case STOP:
+							eAktywnyTryb = FORCE_ON;
+							break;
+						case FORCE_ON:
+							eAktywnyTryb = STOP;
+							break;
+						default:
+							eAktywnyTryb = STOP;
+							break;
+					}
+//				  PORTC ^=  (1<<PRZEKAZNIK);
+//				  PORTA ^=  (1<<LED);
+//				  _delay_ms(500);
 				  //nie chcemy zeby klikniecie przekaznika bylo 'slyszane' przez mikrofon!
 				  ucKlaskFlag=0;
-
 			  }
 			  uiMeasurementIndex=0;
 		  }
-
 }
