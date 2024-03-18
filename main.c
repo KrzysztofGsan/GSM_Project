@@ -20,6 +20,7 @@
 #define TRUE 1
 #define FALSE 0
 
+
 #define PIN_PRZYCISKOW PIND
 #define WEJSCIA_PRZYCISKOW (PIN_PRZYCISKOW & (PRZYCISK_ZATRZYMAJ|PRZYCISK_TRYBU))
 #define PROG_TRZYMANIA 2000
@@ -41,11 +42,13 @@ unsigned char minuty_dziesiatki;
 unsigned char minuty_jednostki;
 unsigned char godziny_dziesiatki;
 unsigned char godziny_jednostki;
+unsigned char ucKlaskFlag=0;
 
 unsigned char ON_godzina=20;
 unsigned char ON_minuta=30;
 unsigned char OFF_godzina=21;
 unsigned char OFF_minuta=00;
+
 
 void ADC_Init(void);
 void ADC_Pomiar(int Pin);
@@ -71,9 +74,11 @@ void TimeTWIRead(void);
 char TimeMatchCheck(int godzina_zal, int minuta_zal);
 void ADC_init(void);
 uint16_t ADC_read(uint8_t channel);
+void ObslugaKlaskacza(void);
 //void WYSWIETLACZ_LCD_Off(void);
 
-uint16_t ADC_val;
+
+
 volatile int iFlagaDoWyslania;
 char WzorWiadOdebr[] = "+CMTI: "; //char WzorWiadOdebr[] = "+CMTI: \"SM\",";
 char WzorMetadanych[] = "+CMGR:";
@@ -145,9 +150,8 @@ int main(void){
 //  Wyswietlanie("Oczekiwanie     na SMS..."); //odkomentuj
   eAktywnyTryb = FORCE_ON; //poczatkowy tryb
   while(1){
-	  //_delay_ms(100);
-	  ADC_val = ADC_read(2);
 
+	  ObslugaKlaskacza();
 	  TimeTWIRead();
 
 	  switch(eAktywnyTryb){
@@ -174,6 +178,7 @@ int main(void){
 
 	  //WczytujDane();
 	  //SprawdzDane();
+
 	  Obsluga_Przyciskow();
    }
    return 0;
@@ -622,8 +627,7 @@ void ObslugaWyswietlacza(void){
 	lcd_puts(cTrescWiadomosci1);
 
 	LCD_LOCATE(0,1);
-	//sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
-	sprintf(cTrescWiadomosci2,"ADC: %d",ADC_val);
+	sprintf(cTrescWiadomosci2,"%d%d:%d%d:%d%d",godziny_dziesiatki,godziny_jednostki,minuty_dziesiatki,minuty_jednostki,sekundy_dziesiatki,sekundy_jednostki);
 	lcd_puts(cTrescWiadomosci2);
 
 	if(uiLicznikMrugania>=2*PROG_MRUGANIA){
@@ -713,7 +717,9 @@ void ADC_init() {
 }
 
 uint16_t ADC_read(uint8_t channel) {
-    // Wybór kanału ADC
+    cli();
+
+	// Wybór kanału ADC
     ADMUX &= 0xF0;          // Wyczyszczenie starszych bitów
     ADMUX |= channel & 0x0F; // Ustawienie kanału ADC
 
@@ -733,6 +739,8 @@ uint16_t ADC_read(uint8_t channel) {
 
 
     // Zwrócenie wyniku konwersji
+
+    sei();
     return ADC;
 }
 
@@ -749,3 +757,30 @@ void WYSWIETLACZ_LCD_Off(void){
 	PORTA |=  _BV(PA7);
 }
 */
+
+void ObslugaKlaskacza(void){
+#define MEASUREMENT_RANGE 300
+#define SOUND_THRESHOLD	350
+unsigned int uiMeasurementIndex=0;
+uint16_t ADC_val;
+
+	 if(uiMeasurementIndex<MEASUREMENT_RANGE){
+		 ADC_val = ADC_read(2);
+			  uiMeasurementIndex++;
+			  if(ADC_val<SOUND_THRESHOLD){
+				  ucKlaskFlag=1;
+			  }
+		  }
+		  else{
+			  if (ucKlaskFlag==1){
+				  PORTC ^=  (1<<PRZEKAZNIK);
+				  PORTA ^=  (1<<LED);
+				  _delay_ms(500);
+				  //nie chcemy zeby klikniecie przekaznika bylo 'slyszane' przez mikrofon!
+				  ucKlaskFlag=0;
+
+			  }
+			  uiMeasurementIndex=0;
+		  }
+
+}
