@@ -43,6 +43,7 @@ unsigned char minuty_jednostki;
 unsigned char godziny_dziesiatki;
 unsigned char godziny_jednostki;
 unsigned char ucKlaskFlag=0;
+unsigned char ucKlaskMuteFlag=0;
 
 unsigned char ON_godzina=20;
 unsigned char ON_minuta=30;
@@ -767,7 +768,7 @@ uint16_t ADC_val;
 	 	 if(uiMeasurementIndex<MEASUREMENT_RANGE){
 		 ADC_val = ADC_read(2);
 			  uiMeasurementIndex++;
-			  if(ADC_val<SOUND_THRESHOLD){
+			  if((ADC_val<SOUND_THRESHOLD)&&(ucKlaskMuteFlag==0)){
 				  ucKlaskFlag=1;
 			  }
 		  }
@@ -789,6 +790,10 @@ uint16_t ADC_val;
 //				  _delay_ms(500);
 				  //nie chcemy zeby klikniecie przekaznika bylo 'slyszane' przez mikrofon!
 				  ucKlaskFlag=0;
+				  ucKlaskMuteFlag=1;
+			  }
+			  else{
+				  ucKlaskMuteFlag=0;
 			  }
 			  uiMeasurementIndex=0;
 		  }
