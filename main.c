@@ -26,7 +26,7 @@
 #define PROG_TRZYMANIA 2000
 #define PROG_MRUGANIA 20
 #define ROZMIAR_BUFORA 32//32
-enum Tryb {STOP = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13, FORCE_ON=14 };
+enum Tryb {FORCE_OFF = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13, FORCE_ON=14, FORCE_ON_SET=15, KLASK_CONTROL=16,KLASK_CONTROL_SET=17};
 enum Tryb eAktywnyTryb = GSM;
 char cTryb[17]= "GSM CONTROL";
 unsigned char ucWejsciaPrzyciskowNowe=0;
@@ -43,12 +43,12 @@ unsigned char minuty_jednostki;
 unsigned char godziny_dziesiatki;
 unsigned char godziny_jednostki;
 unsigned char ucKlaskFlag=0;
-unsigned char ucKlaskMuteFlag=0;
+unsigned char ucKlaskTemporaryMuteFlag=0;
 
-unsigned char ON_godzina=20;
-unsigned char ON_minuta=30;
+unsigned char ON_godzina=21;
+unsigned char ON_minuta=31;
 unsigned char OFF_godzina=21;
-unsigned char OFF_minuta=00;
+unsigned char OFF_minuta=35;
 
 
 void ADC_Init(void);
@@ -119,8 +119,8 @@ int main(void){
    TWI_inicjacja();
 //   TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
 //   TWI_zapis(0x00,0x00);//sekund
-//   TWI_zapis(0x01,0x19);//minut
-//   TWI_zapis(0x02,0x20);//godzina
+//   TWI_zapis(0x01,0x16);//minut
+//   TWI_zapis(0x02,0x21);//godzina
    ADC_init();
    PWM_inicjacja();
    Timer0_inicjacja();
@@ -152,12 +152,10 @@ int main(void){
   eAktywnyTryb = FORCE_ON; //poczatkowy tryb
   while(1){
 
-	  ObslugaKlaskacza();
 	  TimeTWIRead();
 
 	  switch(eAktywnyTryb){
 	  	  case TIME_CONTROL:
-			  TimeTWIRead();
 			  if ( TimeMatchCheck(ON_godzina,ON_minuta) == TRUE){
 				  PORTC |= (1<<PRZEKAZNIK);
 				  PORTA |=  (1<<LED);
@@ -171,7 +169,10 @@ int main(void){
 			  PORTC |= (1<<PRZEKAZNIK);
 			  PORTA |=  (1<<LED);
 	  		  break;
-	  	  default: //dla STOP i oraz podczas ustawiania godzin ON OFF wyłączymy wyjscie
+	  	  case KLASK_CONTROL:
+		  	  ObslugaKlaskacza();
+	  	  	  break;
+	  	  case FORCE_OFF:
 	  		  PORTC &= ~(1<<PRZEKAZNIK);
 	  		  PORTA &=  ~(1<<LED);
 	  		  break;
@@ -286,25 +287,19 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 	ucWejsciaPrzyciskowNowe = WEJSCIA_PRZYCISKOW;
     ucWejsciaPrzyciskowXOR = (ucWejsciaPrzyciskowNowe^ucWejsciaPrzyciskowStare);
 	if( ucWejsciaPrzyciskowXOR & PRZYCISK_ZATRZYMAJ){ //PRZYCISK_ZATRZYMAJ ma priorytet! func
-
-		switch(eAktywnyTryb){
-			case STOP:
-				eAktywnyTryb = FORCE_ON;
-				break;
-			case FORCE_ON:
-				eAktywnyTryb = STOP;
-				break;
-			default:
-				eAktywnyTryb = STOP;
-				break;
-		}
+		eAktywnyTryb = FORCE_OFF;
 		uiLicznikPozNeutralnej=0;
 	}
 	else if( ucWejsciaPrzyciskowXOR & PRZYCISK_TRYBU ){ //jesli sie zmienił stan
 
 		switch(eAktywnyTryb){
-			case TIME_CONTROL:
-			case STOP:
+			case FORCE_OFF:
+				eAktywnyTryb = FORCE_ON_SET;
+				break;
+			case FORCE_ON_SET:
+				eAktywnyTryb =KLASK_CONTROL_SET;
+				break;
+			case KLASK_CONTROL_SET:
 				eAktywnyTryb = ON_HOUR_SET;  //po pierwszym nacisnieciu przycisku bedziemy ustawiac godziny zal/wyl poczynajac od godziny zalaczenia.
 				break;
 			case ON_HOUR_SET:
@@ -339,6 +334,9 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 			uiLicznikPozNeutralnej=0;
 			uiLicznikMrugania=0;
 			switch(eAktywnyTryb){
+				case FORCE_ON_SET:
+					eAktywnyTryb = FORCE_ON;
+					break;
 				case ON_HOUR_SET:
 					eAktywnyTryb=ON_MIN_SET;
 					break;
@@ -348,14 +346,17 @@ void Obsluga_Przyciskow(void){ //UWAGA! przyciski sa bistabilne! Nie widac czy s
 				case OFF_HOUR_SET:
 					eAktywnyTryb=OFF_MIN_SET;
 					break;
-				case STOP: //podtrzymanie stopa gdy nic nie jest nacisniete
-					eAktywnyTryb=STOP;
+				case FORCE_OFF: //podtrzymanie stopa gdy nic nie jest nacisniete
+					eAktywnyTryb=FORCE_OFF;
 					break;
 				case FORCE_ON:
 					eAktywnyTryb = FORCE_ON; // podtrzymanie force on gdy nic nie jest nacisniete
 					break;
-				default:
+				case OFF_MIN_SET:
 					eAktywnyTryb=TIME_CONTROL;
+					break;
+				case KLASK_CONTROL_SET:
+					eAktywnyTryb = KLASK_CONTROL;
 					break;
 			}
 		}
@@ -594,36 +595,83 @@ void ObslugaWyswietlacza(void){
 	LCD_CLEAR;
 
 	switch(eAktywnyTryb){
-		case STOP:
-			sprintf(cTrescWiadomosci1,"Stop Awaryjny!");
+		//wpisywanie tresci
+		case FORCE_OFF:
+			sprintf(cTrescWiadomosci1,"FORCE_OFF");
 			break;
 		case FORCE_ON:
 			sprintf(cTrescWiadomosci1,"FORCE_ON");
 			break;
+		case FORCE_ON_SET:
+			sprintf(cTrescWiadomosci1,"FORCE_ON");
+			break;
+		case KLASK_CONTROL:
+			sprintf(cTrescWiadomosci1,"KLASK_CONTROL");
+			break;
+		case KLASK_CONTROL_SET:
+			sprintf(cTrescWiadomosci1,"KLASK_CONTROL");
+			break;
 		default:
 			sprintf(cTrescWiadomosci1,"ON%02d:%02d OFF%02d:%02d",ON_godzina,ON_minuta,OFF_godzina,OFF_minuta);
-
-			if(uiLicznikMrugania<=PROG_MRUGANIA){
-				if(eAktywnyTryb==ON_HOUR_SET){
-					cTrescWiadomosci1[2] = ' ';
-					cTrescWiadomosci1[3] = ' ';
-				}
-				else if(eAktywnyTryb==ON_MIN_SET){
-					cTrescWiadomosci1[5] = ' ';
-					cTrescWiadomosci1[6] = ' ';
-				}
-				else if(eAktywnyTryb==OFF_HOUR_SET){
-					cTrescWiadomosci1[11] = ' ';
-					cTrescWiadomosci1[12] = ' ';
-				}
-				else if(eAktywnyTryb==OFF_MIN_SET){
-					cTrescWiadomosci1[14] = ' ';
-					cTrescWiadomosci1[15] = ' ';
-				}
-			}
-			break;
+		break;
 	}
-
+	//obsluga migania
+	if(uiLicznikMrugania<=PROG_MRUGANIA){
+		switch(eAktywnyTryb){
+		case FORCE_ON_SET:
+			cTrescWiadomosci1[0] = ' ';
+			cTrescWiadomosci1[1] = ' ';
+			cTrescWiadomosci1[2] = ' ';
+			cTrescWiadomosci1[3] = ' ';
+			cTrescWiadomosci1[4] = ' ';
+			cTrescWiadomosci1[5] = ' ';
+			cTrescWiadomosci1[6] = ' ';
+			cTrescWiadomosci1[7] = ' ';
+			cTrescWiadomosci1[8] = ' ';
+			cTrescWiadomosci1[9] = ' ';
+			cTrescWiadomosci1[10] = ' ';
+			cTrescWiadomosci1[11] = ' ';
+			cTrescWiadomosci1[12] = ' ';
+			cTrescWiadomosci1[13] = ' ';
+			cTrescWiadomosci1[14] = ' ';
+			cTrescWiadomosci1[15] = ' ';
+			break;
+		case KLASK_CONTROL_SET:
+			cTrescWiadomosci1[0] = ' ';
+			cTrescWiadomosci1[1] = ' ';
+			cTrescWiadomosci1[2] = ' ';
+			cTrescWiadomosci1[3] = ' ';
+			cTrescWiadomosci1[4] = ' ';
+			cTrescWiadomosci1[5] = ' ';
+			cTrescWiadomosci1[6] = ' ';
+			cTrescWiadomosci1[7] = ' ';
+			cTrescWiadomosci1[8] = ' ';
+			cTrescWiadomosci1[9] = ' ';
+			cTrescWiadomosci1[10] = ' ';
+			cTrescWiadomosci1[11] = ' ';
+			cTrescWiadomosci1[12] = ' ';
+			cTrescWiadomosci1[13] = ' ';
+			cTrescWiadomosci1[14] = ' ';
+			cTrescWiadomosci1[15] = ' ';
+			break;
+		case ON_HOUR_SET:
+			cTrescWiadomosci1[2] = ' ';
+			cTrescWiadomosci1[3] = ' ';
+			break;
+		case ON_MIN_SET:
+			cTrescWiadomosci1[5] = ' ';
+			cTrescWiadomosci1[6] = ' ';
+			break;
+		case OFF_HOUR_SET:
+			cTrescWiadomosci1[11] = ' ';
+			cTrescWiadomosci1[12] = ' ';
+			break;
+		case OFF_MIN_SET:
+			cTrescWiadomosci1[14] = ' ';
+			cTrescWiadomosci1[15] = ' ';
+			break;
+		}
+	}
 	LCD_LOCATE(0,0);
 	lcd_puts(cTrescWiadomosci1);
 
@@ -635,6 +683,7 @@ void ObslugaWyswietlacza(void){
 		uiLicznikMrugania=0;
 	}
 	uiLicznikMrugania++;
+
 }
 /*
 void Wystartowanie_Trybu(int eAktywnyTryb){
@@ -768,32 +817,28 @@ uint16_t ADC_val;
 	 	 if(uiMeasurementIndex<MEASUREMENT_RANGE){
 		 ADC_val = ADC_read(2);
 			  uiMeasurementIndex++;
-			  if((ADC_val<SOUND_THRESHOLD)&&(ucKlaskMuteFlag==0)){
+			  if((ADC_val<SOUND_THRESHOLD)&&(ucKlaskTemporaryMuteFlag==0)){
 				  ucKlaskFlag=1;
 			  }
 		  }
 		  else{
 			  if (ucKlaskFlag==1){
 					switch(eAktywnyTryb){
-						case STOP:
+						case FORCE_OFF:
 							eAktywnyTryb = FORCE_ON;
 							break;
 						case FORCE_ON:
-							eAktywnyTryb = STOP;
+							eAktywnyTryb = FORCE_OFF;
 							break;
 						default:
-							eAktywnyTryb = STOP;
+							eAktywnyTryb = FORCE_OFF;
 							break;
 					}
-//				  PORTC ^=  (1<<PRZEKAZNIK);
-//				  PORTA ^=  (1<<LED);
-//				  _delay_ms(500);
-				  //nie chcemy zeby klikniecie przekaznika bylo 'slyszane' przez mikrofon!
 				  ucKlaskFlag=0;
-				  ucKlaskMuteFlag=1;
+				  ucKlaskTemporaryMuteFlag=1; //nie chcemy zeby klikniecie przekaznika bylo 'slyszane' przez mikrofon!
 			  }
 			  else{
-				  ucKlaskMuteFlag=0;
+				  ucKlaskTemporaryMuteFlag=0;
 			  }
 			  uiMeasurementIndex=0;
 		  }
