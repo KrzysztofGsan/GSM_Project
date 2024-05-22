@@ -27,8 +27,9 @@
 #define PROG_MRUGANIA 20
 #define ROZMIAR_BUFORA 32//32
 enum Tryb {FORCE_OFF = 0, PRE_GSM=1, GSM=2, PRE_BT=4, BT =5, PRE_POT= 6, POT=7, PRE_STOP=8, ON_MIN_SET=9, ON_HOUR_SET=10, OFF_MIN_SET=11, OFF_HOUR_SET=12, TIME_CONTROL=13, FORCE_ON=14, FORCE_ON_SET=15, KLASK_CONTROL=16,KLASK_CONTROL_SET=17};
-enum Tryb eAktywnyTryb = GSM;
-char cTryb[17]= "GSM CONTROL";
+enum Tryb eAktywnyTryb;
+enum OutputRequest {OFF = 0, ON = 1, TOGGLE = 2, NO_REQUEST = 3};
+//char cTryb[17]= "GSM CONTROL";
 unsigned char ucWejsciaPrzyciskowNowe=0;
 unsigned char ucWejsciaPrzyciskowStare=0;
 unsigned char ucWejsciaPrzyciskowXOR=0;
@@ -76,6 +77,7 @@ char TimeMatchCheck(int godzina_zal, int minuta_zal);
 void ADC_init(void);
 uint16_t ADC_read(uint8_t channel);
 void ObslugaKlaskacza(void);
+void OutputControl(int Request);
 //void WYSWIETLACZ_LCD_Off(void);
 
 
@@ -157,24 +159,20 @@ int main(void){
 	  switch(eAktywnyTryb){
 	  	  case TIME_CONTROL:
 			  if ( TimeMatchCheck(ON_godzina,ON_minuta) == TRUE){
-				  PORTC |= (1<<PRZEKAZNIK);
-				  PORTA |=  (1<<LED);
+				  OutputControl(ON);
 			  }
 			  if ( TimeMatchCheck(OFF_godzina,OFF_minuta) == TRUE){
-				  PORTC &= ~(1<<PRZEKAZNIK);
-				  PORTA &=  ~(1<<LED);
+				  OutputControl(OFF);
 			  }
 			  break;
 	  	  case FORCE_ON:
-			  PORTC |= (1<<PRZEKAZNIK);
-			  PORTA |=  (1<<LED);
+	  		  OutputControl(ON);
 	  		  break;
 	  	  case KLASK_CONTROL:
 		  	  ObslugaKlaskacza();
 	  	  	  break;
 	  	  case FORCE_OFF:
-	  		  PORTC &= ~(1<<PRZEKAZNIK);
-	  		  PORTA &=  ~(1<<LED);
+	  		  OutputControl(OFF);
 	  		  break;
 	  }
 
@@ -823,17 +821,7 @@ uint16_t ADC_val;
 		  }
 		  else{
 			  if (ucKlaskFlag==1){
-					switch(eAktywnyTryb){
-						case FORCE_OFF:
-							eAktywnyTryb = FORCE_ON;
-							break;
-						case FORCE_ON:
-							eAktywnyTryb = FORCE_OFF;
-							break;
-						default:
-							eAktywnyTryb = FORCE_OFF;
-							break;
-					}
+				  OutputControl(TOGGLE);
 				  ucKlaskFlag=0;
 				  ucKlaskTemporaryMuteFlag=1; //nie chcemy zeby klikniecie przekaznika bylo 'slyszane' przez mikrofon!
 			  }
@@ -842,4 +830,23 @@ uint16_t ADC_val;
 			  }
 			  uiMeasurementIndex=0;
 		  }
+}
+
+void OutputControl(int Request){
+	switch(Request){
+		case OFF:
+			PORTC &= ~(1<<PRZEKAZNIK);
+			 PORTA &=  ~(1<<LED);
+			break;
+		case ON:
+			PORTC |= (1<<PRZEKAZNIK);
+			PORTA |=  (1<<LED);
+			break;
+		case TOGGLE:
+			PORTC ^= (1<<PRZEKAZNIK);
+			PORTA ^=  (1<<LED);
+			break;
+		case NO_REQUEST:
+			break;
+	}
 }
