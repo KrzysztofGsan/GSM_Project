@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name MagisterkaV2-rescue)(type Legacy)(uri /media/krzysztof/Dane/Elektronika/Magisterkav2/nowySchematPCB/MagisterkaV2-rescue.lib)(options "")(descr ""))
+  (lib (name KGlib)(type Legacy)(uri /media/krzysztof/Dane/Elektronika/Magisterkav2/nowySchematPCB/library/KGlib.lib)(options "")(descr ""))
+)
