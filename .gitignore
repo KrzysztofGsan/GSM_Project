@@ -1,6 +1,16 @@
+# Folder wyjœciowy kompilacji Eclipse (AVR)
 /Debug/
 /Release/
 *.o
 *.elf
 *.hex
 *.bin
+
+# Pliki tymczasowe i kopie zapasowe KiCada (wewn¹trz folderu hardware)
+hardware/*.bak
+hardware/*.kicad_pcb-bak
+hardware/*.sch-bak
+hardware/*~
+hardware/_autosave-*
+hardware/*.tmp
+hardware/fp-info-cache
