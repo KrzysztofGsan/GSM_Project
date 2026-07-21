@@ -56,7 +56,6 @@ unsigned char OFF_godzina = 21;
 unsigned char OFF_minuta = 35;
 
 void ADC_Init(void);
-void ADC_Pomiar(int Pin);
 uint16_t ADC_read(uint8_t channel);
 void USART_Init(void);
 void USART_Wyslij(char cTekst[]);
@@ -94,6 +93,11 @@ char cMetaDaneWiadomosci[65];
 char cOdebranaKomenda[64];
 char *cDane;
 char cFlagaZapelnieniaPamieci;
+
+// Bufor dla dynamicznego podglądu i przewijania odebranego SMS-a na LCD
+char cOdebranySMS_Podglad[100] = "";
+volatile unsigned int uiLicznikPodgladuSMS = 0;
+int iOffsetPrzewijania = 0;
 
 volatile unsigned char vucBuforCykliczny[ROZMIAR_BUFORA];
 volatile int viIndeksZapisu;
@@ -150,7 +154,7 @@ int main(void) {
     cStan = OCZEKIWANIE_NA_POWIADOMIENIE_O_WIADOMOSCI;
     cDane = cOdebranaKomenda;
 
-    // Ustawienie domyślnego trybu GSM po uruchomieniu
+    // Domyślny tryb pracy po uruchomieniu mikrokontrolera
     eAktywnyTryb = GSM;
 
     while(1) {
@@ -158,7 +162,7 @@ int main(void) {
 
         switch(eAktywnyTryb) {
             case GSM:
-                // W trybie GSM odebrany SMS steruje wyjściami w funkcji SprawdzDane()
+                // Sterowanie odbywa się automatycznie poprzez odebrane wiadomości SMS w SprawdzDane()
                 break;
             case TIME_CONTROL:
                 if (TimeMatchCheck(ON_godzina, ON_minuta) == TRUE) {
@@ -225,6 +229,12 @@ void SprawdzDane(void) {
     int iLicznikZnakow;
 
     if (cStan == OCZEKIWANIE_NA_ANALIZE) {
+        // Kopiowanie odebranej wiadomości do podglądu LCD i wyzwolenie czasu podglądu
+        snprintf(cOdebranySMS_Podglad, sizeof(cOdebranySMS_Podglad), "%s", cTrescWiadomosci2);
+        iOffsetPrzewijania = 0;
+        uiLicznikPodgladuSMS = 250; // Podgląd aktywny na ok. 5 sekund
+
+        // Konwersja na małe litery
         for (int i = 0; cTrescWiadomosci2[i] != '\0'; i++) {
             cTrescWiadomosci2[i] = tolower((unsigned char)cTrescWiadomosci2[i]);
         }
@@ -487,18 +497,36 @@ void Wyjscia_Init(void) {
 }
 
 void ObslugaWyswietlacza(void) {
+    // --- PIERWSZA LINIA LCD (PREZENTACJA TRYBU) ---
     switch(eAktywnyTryb) {
-        case GSM:              sprintf(cTrescWiadomosci1, "GSM CONTROL     "); break;
-        case FORCE_OFF:        sprintf(cTrescWiadomosci1, "FORCE_OFF       "); break;
-        case FORCE_ON:         sprintf(cTrescWiadomosci1, "FORCE_ON        "); break;
-        case FORCE_ON_SET:     sprintf(cTrescWiadomosci1, "FORCE_ON        "); break;
-        case KLASK_CONTROL:    sprintf(cTrescWiadomosci1, "KLASK_CONTROL   "); break;
-        case KLASK_CONTROL_SET:sprintf(cTrescWiadomosci1, "KLASK_CONTROL   "); break;
+        case GSM:
+            sprintf(cTrescWiadomosci1, "GSM CONTROL     ");
+            break;
+
+        case TIME_CONTROL:
+            sprintf(cTrescWiadomosci1, "ON%02d:%02d OFF%02d:%02d", ON_godzina, ON_minuta, OFF_godzina, OFF_minuta);
+            break;
+
+        case FORCE_OFF:
+            sprintf(cTrescWiadomosci1, "FORCE_OFF       ");
+            break;
+
+        case FORCE_ON:
+        case FORCE_ON_SET:
+            sprintf(cTrescWiadomosci1, "FORCE_ON        ");
+            break;
+
+        case KLASK_CONTROL:
+        case KLASK_CONTROL_SET:
+            sprintf(cTrescWiadomosci1, "KLASK_CONTROL   ");
+            break;
+
         default:
             sprintf(cTrescWiadomosci1, "ON%02d:%02d OFF%02d:%02d", ON_godzina, ON_minuta, OFF_godzina, OFF_minuta);
             break;
     }
 
+    // Miganie wybranego segmentu podczas konfiguracji harmonogramu
     if (uiLicznikMrugania <= PROG_MRUGANIA) {
         switch(eAktywnyTryb) {
             case FORCE_ON_SET:
@@ -515,9 +543,38 @@ void ObslugaWyswietlacza(void) {
 
     LCD_LOCATE(0, 0);
     lcd_puts(cTrescWiadomosci1);
+
+    // --- DRUGA LINIA LCD (ZEGAR RTC LUB PODGLĄD SMS) ---
     LCD_LOCATE(0, 1);
-    sprintf(cTrescWiadomosci2, "%d%d:%d%d:%d%d", godziny_dziesiatki, godziny_jednostki, minuty_dziesiatki, minuty_jednostki, sekundy_dziesiatki, sekundy_jednostki);
-    lcd_puts(cTrescWiadomosci2);
+    if (uiLicznikPodgladuSMS > 0) {
+        int iDlugoscSMS = strlen(cOdebranySMS_Podglad);
+
+        if (iDlugoscSMS <= 16) {
+            // Krótki SMS - stały napis wyrównany spacjami
+            char cBuforKrotki[17];
+            snprintf(cBuforKrotki, sizeof(cBuforKrotki), "%-16s", cOdebranySMS_Podglad);
+            lcd_puts(cBuforKrotki);
+        } else {
+            // Długi SMS - płynne przewijanie napisu w lewo
+            char cOknoTekstowe[17];
+            snprintf(cOknoTekstowe, sizeof(cOknoTekstowe), "%-16s", cOdebranySMS_Podglad + iOffsetPrzewijania);
+            lcd_puts(cOknoTekstowe);
+
+            // Przesuwanie o 1 znak co 4 cykle odświeżania ekranu
+            if (uiLicznikMrugania % 4 == 0) {
+                iOffsetPrzewijania++;
+                if (iOffsetPrzewijania > (iDlugoscSMS - 12)) {
+                    iOffsetPrzewijania = 0;
+                }
+            }
+        }
+        uiLicznikPodgladuSMS--;
+    } else {
+        // Zegar RTC wyświetla się TYLKO gdy minie czas podglądu SMS
+        char cBuforZegara[17];
+        sprintf(cBuforZegara, "%d%d:%d%d:%d%d        ", godziny_dziesiatki, godziny_jednostki, minuty_dziesiatki, minuty_jednostki, sekundy_dziesiatki, sekundy_jednostki);
+        lcd_puts(cBuforZegara);
+    }
 
     uiLicznikMrugania++;
     if (uiLicznikMrugania >= 2 * PROG_MRUGANIA) {
@@ -527,7 +584,7 @@ void ObslugaWyswietlacza(void) {
 
 void TWI_inicjacja(void) {
     TWSR = 0x00;
-    TWBR = 0x20; // 100 kHz dla 8 MHz
+    TWBR = 0x20; // 100 kHz dla F_CPU = 8 MHz
 }
 
 unsigned char TWI_odczyt(unsigned char adres_rejestru) {
