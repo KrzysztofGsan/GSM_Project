@@ -394,6 +394,7 @@ void ZapewnijMiejsceDlaKolejnejWiadomosci(void) {
     if (cFlagaZapelnieniaPamieci == 1) {
         sprintf(cUsunSMS, "AT+CMGD=%d", iIndeks);
         USART_Wyslij(cUsunSMS);
+
     }
 }
 
