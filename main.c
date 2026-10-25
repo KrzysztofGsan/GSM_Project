@@ -139,13 +139,15 @@ int main(void) {
     sei();
 
     USART_Init();
-    _delay_ms(3000);
+    _delay_ms(5000);
 
     USART_Wyslij("ATE0");
-    _delay_ms(500);
+    _delay_ms(1000);
     USART_Wyslij("AT+CMGF=1");
-    _delay_ms(500);
+    _delay_ms(1000);
     USART_Wyslij("AT+CPMS=\"SM\",\"SM\",\"SM\"");
+    _delay_ms(1000);
+    USART_Wyslij("AT+CMGD=1,4"); // <--- Czyszczenie całej pamięci SMS przy starcie
     _delay_ms(500);
 
     viIndeksZapisu = 0;
