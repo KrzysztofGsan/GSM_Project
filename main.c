@@ -124,6 +124,11 @@ int iIndeks = 0;
 int main(void) {
     Przyciski_Init();
     TWI_inicjacja();
+    /*
+    TWI_zapis(0x00,0b00000000); //zeruj bit 'CH' - wlącz oscylator
+    TWI_zapis(0x02,0x21);//godzina 21
+    TWI_zapis(0x01,0x15);//minut
+	*/
     ADC_Init();
     PWM_inicjacja();
     Timer0_inicjacja();
@@ -388,14 +393,8 @@ int Sprawdz_Tekst(char *cTekst, char *cWzorzec) {
 }
 
 void ZapewnijMiejsceDlaKolejnejWiadomosci(void) {
-    if (iIndeks >= 20) {
-        cFlagaZapelnieniaPamieci = 1;
-    }
-    if (cFlagaZapelnieniaPamieci == 1) {
-        sprintf(cUsunSMS, "AT+CMGD=%d", iIndeks);
-        USART_Wyslij(cUsunSMS);
-
-    }
+    sprintf(cUsunSMS, "AT+CMGD=%d", iIndeks);
+    USART_Wyslij(cUsunSMS);
 }
 
 void WczytujDane(void) {
@@ -563,8 +562,8 @@ void ObslugaWyswietlacza(void) {
             snprintf(cOknoTekstowe, sizeof(cOknoTekstowe), "%-16s", cOdebranySMS_Podglad + iOffsetPrzewijania);
             lcd_puts(cOknoTekstowe);
 
-            // Przesuwanie o 1 znak co 4 cykle odświeżania ekranu
-            if (uiLicznikMrugania % 4 == 0) {
+            // Przesuwanie o 1 znak co 128 cykli odświeżania ekranu
+            if (uiLicznikMrugania % 128 == 0) {
                 iOffsetPrzewijania++;
                 if (iOffsetPrzewijania > (iDlugoscSMS - 12)) {
                     iOffsetPrzewijania = 0;
